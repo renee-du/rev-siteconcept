@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Rev Redesign Concept</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: Motto-style editorial grid — full-bleed hairline rows, giant uppercase grotesk, (PAREN) labels;
+   Rev's orange + teal are the only colors; the flat-top hexagon is the recurring shape. */
+:root{
+  --paper:#F1F2F0; --paper-2:#E5E8E5; --ink:#0F1615; --muted:#58625F; --line:rgba(15,22,21,.16);
+  --orange:#FD8C01; --teal:#007A76; --deep:#00596B; --sun:#FFC423; --on-accent:#0F1615; --band-ink:#F1F2F0;
+  --display:"Inter Tight","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --g:clamp(16px,3.2vw,48px);
+  --hdr:68px;
+  --hex:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0C1110; --paper-2:#161D1B; --ink:#E9EDEA; --muted:#94A19D; --line:rgba(233,237,234,.15);
+  --orange:#FF981F; --teal:#26AAA3; --deep:#00434F; --sun:#FFCB45; --on-accent:#0F1615; --band-ink:#E9EDEA; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C1110; --paper-2:#161D1B; --ink:#E9EDEA; --muted:#94A19D; --line:rgba(233,237,234,.15);
+  --orange:#FF981F; --teal:#26AAA3; --deep:#00434F; --sun:#FFCB45; --on-accent:#0F1615; --band-ink:#E9EDEA; color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-behavior:auto}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--display);-webkit-font-smoothing:antialiased;overflow-x:clip}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--paper)}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+::selection{background:var(--orange);color:var(--on-accent)}
+
+.wrap{padding-left:max(var(--g),env(safe-area-inset-left,0px));padding-right:max(var(--g),env(safe-area-inset-right,0px))}
+.lbl{font:500 12px/1.2 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.lbl.ink{color:var(--ink)}
+.u{position:relative;display:inline-block;padding-bottom:3px}
+.u::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:currentColor;transform-origin:right;transition:transform .5s var(--ease)}
+.u:hover::after{transform:scaleX(0)}
+.arrow{display:inline-block;transition:transform .4s var(--ease)}
+a:hover .arrow{transform:translateX(4px)}
+.hexdot{display:inline-block;width:.62em;height:.54em;background:var(--orange);clip-path:var(--hex);flex:none}
+.hexdot.teal{background:var(--teal)}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+
+h1,h2,h3{font-weight:500;margin:0;text-wrap:balance}
+.display{font-size:clamp(2.6rem,8.1vw,10rem);line-height:.88;letter-spacing:-.045em;text-transform:uppercase}
+.h2{font-size:clamp(2.4rem,6.6vw,6.6rem);line-height:.9;letter-spacing:-.04em;text-transform:uppercase}
+.h3{font-size:clamp(1.5rem,2.5vw,2.25rem);line-height:1.05;letter-spacing:-.025em}
+.lede{font-size:clamp(1.05rem,1.4vw,1.3rem);line-height:1.4;max-width:34ch;letter-spacing:-.01em}
+.body{color:var(--muted);max-width:62ch}
+p{margin:0}
+
+/* ---------- header ---------- */
+.hdr{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:50;height:var(--hdr);display:flex;align-items:center;gap:24px;
+  transition:background .4s,border-color .4s,transform .5s var(--ease);border-bottom:1px solid transparent}
+.hdr.solid{background:color-mix(in srgb,var(--paper) 86%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:var(--line)}
+.hdr .logo{display:flex;align-items:center;gap:10px;flex:none}
+.hdr .logo img{height:30px;width:auto;transition:height .4s var(--ease)}
+.hdr.compact .logo img{height:24px}
+.lg-d{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lg-l{display:none}:root:not([data-theme="light"]) .lg-d{display:inline}}
+:root[data-theme="dark"] .lg-l{display:none}:root[data-theme="dark"] .lg-d{display:inline}
+.nav{display:flex;gap:28px;margin-inline:auto;font-size:15px;transition:opacity .35s,transform .45s var(--ease)}
+.nav a{position:relative;padding:4px 0}
+.nav a[aria-current="page"]::before{content:"";position:absolute;left:-14px;top:50%;width:8px;height:7px;margin-top:-3px;background:var(--orange);clip-path:var(--hex)}
+.hdr.compact .nav{opacity:0;transform:translateY(-12px);pointer-events:none}
+.hdr .right{display:flex;align-items:center;gap:22px;margin-left:auto;font-size:15px}
+.menu-btn{display:none;font-size:15px}
+.hdr.compact .menu-btn{display:inline-block}
+@media (max-width:900px){.nav{display:none}.menu-btn{display:inline-block}.hdr .apply-top{display:none}}
+
+/* menu overlay */
+.menu{position:fixed;inset:0;z-index:70;background:var(--paper);display:flex;flex-direction:column;
+  padding-top:calc(env(safe-area-inset-top,0px) + 18px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);
+  clip-path:inset(0 0 100% 0);transition:clip-path .7s var(--ease);visibility:hidden;overflow:auto}
+.menu.open{clip-path:inset(0 0 0 0);visibility:visible}
+.menu-top{display:flex;justify-content:space-between;align-items:center;height:48px}
+.menu-top img{height:28px;width:auto}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:36px 24px;margin-top:5vh}
+.menu-grid h4{margin:0 0 12px;font:500 clamp(2rem,4.4vw,3.6rem)/.95 var(--display);letter-spacing:-.035em;text-transform:uppercase}
+.menu-grid h4 a:hover{color:var(--orange)}
+.menu-grid ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;color:var(--muted)}
+.menu-grid li a:hover{color:var(--ink)}
+.menu .col{transform:translateY(30px);opacity:0;transition:transform .8s var(--ease),opacity .6s}
+.menu.open .col{transform:none;opacity:1}
+.menu.open .col:nth-child(2){transition-delay:.06s}.menu.open .col:nth-child(3){transition-delay:.12s}.menu.open .col:nth-child(4){transition-delay:.18s}
+
+/* ---------- hero ---------- */
+.hero{padding-top:calc(var(--hdr) + 8px)}
+.hero-row{display:flex;align-items:center;justify-content:space-between;gap:.25em;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-block:.06em .03em}
+.hero-row:first-child{border-top:1px solid var(--line)}
+@media (min-width:640px){.hero-row{flex-wrap:nowrap}}
+@media (max-width:639px){.hero-row{justify-content:flex-start;column-gap:.3em}.hero .display{font-size:clamp(2.4rem,12.5vw,4rem)}}
+.ln{display:inline-block;overflow:hidden;vertical-align:bottom;padding-bottom:.04em}
+.ln>span{display:inline-block;animation:rise 1.1s var(--ease) both}
+.hero-row:nth-child(1) .ln:nth-of-type(2)>span{animation-delay:.07s}
+.hero-row:nth-child(2) .ln>span{animation-delay:.14s}
+.hero-row:nth-child(2) .ln:nth-of-type(2)>span{animation-delay:.21s}
+@keyframes rise{from{transform:translateY(105%)}to{transform:none}}
+.hero-mark{width:.62em;height:.54em;flex:none;display:grid;place-items:center;animation:spin 18s linear infinite}
+.hero-mark svg{width:100%;height:100%}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sup{font:500 12px/1 var(--mono);letter-spacing:.04em;vertical-align:top;margin-left:.4em;color:var(--orange);position:relative;top:.6em}
+.hero-foot{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr) auto;gap:24px;align-items:end;padding-block:28px 36px;border-bottom:1px solid var(--line)}
+.hero-foot .thumb{width:min(260px,100%);aspect-ratio:16/10;overflow:hidden;background:var(--paper-2)}
+.hero-foot .thumb img{width:100%;height:100%;object-fit:cover;filter:grayscale(1);animation:kenburns 14s ease-in-out infinite alternate}
+@keyframes kenburns{from{transform:scale(1.02)}to{transform:scale(1.18) translate(-3%,2%)}}
+.hero-foot .cta-row{display:flex;gap:22px;margin-top:22px;flex-wrap:wrap}
+.scroll-cue{font:500 12px/1 var(--mono);letter-spacing:.06em;display:flex;gap:8px;align-items:center}
+.scroll-cue i{display:block;width:7px;height:6px;background:var(--orange);clip-path:var(--hex);animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(5px)}}
+@media (max-width:760px){.hero-foot{grid-template-columns:1fr}.hero-foot .scroll-cue{display:none}}
+
+/* ---------- zoom-to-scroll stage ---------- */
+.zoom{position:relative;height:250vh}
+.zoom-sticky{position:sticky;top:0;height:100vh;height:100svh;display:grid;place-items:center;overflow:hidden}
+.zoom-frame{position:relative;overflow:hidden;width:min(42vw,520px);aspect-ratio:auto;height:calc(min(42vw,520px)*.866);clip-path:var(--hex);background:var(--paper-2);will-change:width,height,clip-path}
+.zoom-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.35);filter:grayscale(1);will-change:transform}
+.zoom-cap{position:absolute;inset:auto 0 0 0;color:#F1F2F0;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  padding-block:0 calc(28px + env(safe-area-inset-bottom,0px));opacity:clamp(0,calc((var(--p,0) - .72) * 4),1);pointer-events:none}
+.zoom-cap .big{font:500 clamp(2rem,6vw,5.6rem)/.9 var(--display);letter-spacing:-.04em;text-transform:uppercase;text-shadow:0 2px 30px rgba(0,0,0,.35)}
+.zoom-cap .lbl{color:#F1F2F0}
+.zoom-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,10,9,.62),transparent 55%);opacity:var(--p,0);pointer-events:none}
+.zoom-side{position:absolute;top:50%;transform:translateY(-50%);font:500 12px/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);opacity:calc(1 - var(--p,0)*3);max-width:20ch}
+.zoom-side.l{left:max(var(--g),env(safe-area-inset-left,0px))}
+.zoom-side.r{right:max(var(--g),env(safe-area-inset-right,0px));text-align:right}
+@media (max-width:760px){.zoom{height:200vh}.zoom-side{display:none}}
+
+/* ---------- generic sections ---------- */
+.sec{padding-block:clamp(72px,11vw,160px)}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:end;margin-bottom:clamp(36px,5vw,72px)}
+.sec-head .lbl{margin-bottom:18px;display:block}
+@media (max-width:760px){.sec-head{grid-template-columns:1fr}}
+.rise-in{transition:transform 1.1s var(--ease)}
+.js .rise-in.pre{transform:translateY(48px)}
+
+.photo{overflow:hidden;background:var(--paper-2)}
+.photo img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.04);transition:filter .8s var(--ease);will-change:transform}
+.photo:hover img,a:hover .photo img{filter:grayscale(0)}
+
+/* featured stories */
+.feat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,28px)}
+.feat a{display:grid;gap:14px}
+.feat .photo{aspect-ratio:16/10}
+.feat .photo img{transition:filter .8s var(--ease),transform 1.2s var(--ease)}
+.feat a:hover .photo img{transform:scale(1.06)}
+.feat h3{font-size:clamp(1.15rem,1.6vw,1.45rem);line-height:1.15;letter-spacing:-.015em;font-weight:500}
+@media (max-width:860px){.feat{grid-template-columns:1fr}}
+
+/* offerings */
+.offer{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(24px,5vw,80px)}
+.offer-l{position:sticky;top:calc(var(--hdr) + 24px);align-self:start;display:grid;gap:22px}
+.offer ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.offer li{border-bottom:1px solid var(--line);display:flex;align-items:center;gap:18px;padding-block:18px;font:500 clamp(1.1rem,2.1vw,1.9rem)/1.1 var(--display);letter-spacing:-.02em;text-transform:uppercase;transition:padding .5s var(--ease),color .3s}
+.offer li .hx{width:22px;height:19px;flex:none;clip-path:var(--hex);background:var(--line);transition:background .3s,transform .6s var(--ease)}
+.offer li:hover{padding-left:14px}
+.offer li:hover .hx{background:var(--orange);transform:rotate(60deg)}
+.offer li:nth-child(3n+2):hover .hx{background:var(--teal)}
+@media (max-width:860px){.offer{grid-template-columns:1fr}.offer-l{position:static}}
+
+/* quotes */
+.quote{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(16px,3vw,48px);align-items:start}
+.quote .qh{width:clamp(44px,6vw,88px);aspect-ratio:1/.866;background:var(--teal);clip-path:var(--hex);display:grid;place-items:center;color:var(--paper);font:600 clamp(1.8rem,3.4vw,3.4rem)/1 var(--display)}
+.quote blockquote{margin:0;font:500 clamp(1.6rem,4.2vw,4rem)/1.04 var(--display);letter-spacing:-.035em;text-wrap:balance}
+.quote cite{display:block;margin-top:28px;font-style:normal}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{padding:clamp(20px,3vw,40px) clamp(12px,2vw,28px) clamp(24px,3vw,40px);border-left:1px solid var(--line);display:grid;gap:10px}
+.stat:first-child{border-left:0;padding-left:0}
+.stat .n{font:500 clamp(3rem,8.6vw,9rem)/.85 var(--display);letter-spacing:-.05em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stat .n em{font-style:normal;color:var(--orange)}
+@media (max-width:760px){.stats{grid-template-columns:1fr}.stat{border-left:0;border-top:1px solid var(--line);padding-left:0}.stat:first-child{border-top:0}}
+
+/* events */
+.events{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(24px,5vw,80px)}
+.ev-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.ev-list a{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:18px;align-items:center;padding-block:20px;border-bottom:1px solid var(--line);transition:background .3s,padding .5s var(--ease)}
+.ev-list a:hover{background:var(--paper-2);padding-inline:12px}
+.ev-date{font:500 12px/1.25 var(--mono);text-transform:uppercase;letter-spacing:.05em}
+.ev-date b{display:block;font:500 28px/1 var(--display);letter-spacing:-.03em;margin-top:2px;color:var(--orange)}
+.ev-t{font:500 clamp(1.05rem,1.5vw,1.3rem)/1.2 var(--display);letter-spacing:-.015em}
+.ev-time{color:var(--muted);font-size:14px;margin-top:4px}
+@media (max-width:860px){.events{grid-template-columns:1fr}}
+@media (max-width:480px){.ev-list a{grid-template-columns:64px minmax(0,1fr)}.ev-list .arrow{display:none}}
+
+/* split testimonial */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
+.split .photo{aspect-ratio:4/3.2;clip-path:var(--hex);aspect-ratio:1/.866}
+@media (max-width:860px){.split{grid-template-columns:1fr}}
+
+/* ithaca */
+.wide-photo{aspect-ratio:21/8;margin-block:clamp(32px,5vw,64px)}
+.ranks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,3vw,48px)}
+.rank{display:grid;gap:12px;align-content:start;border-top:1px solid var(--ink);padding-top:18px}
+.rank .r{font:500 clamp(3.4rem,7vw,7rem)/.85 var(--display);letter-spacing:-.05em}
+.rank .r sup{font-size:.4em;color:var(--orange);vertical-align:top;position:relative;top:.15em}
+.rank h3{font-size:1.2rem;letter-spacing:-.01em;line-height:1.2}
+@media (max-width:860px){.ranks{grid-template-columns:1fr}}
+
+/* news */
+.news{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,28px)}
+.news a{display:grid;gap:14px;align-content:start}
+.news .photo{aspect-ratio:4/3}
+.news .photo img{transition:filter .8s var(--ease),transform 1.2s var(--ease)}
+.news a:hover .photo img{transform:scale(1.06)}
+.news h3{font-size:1.15rem;line-height:1.2;letter-spacing:-.01em}
+@media (max-width:1000px){.news{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.news{grid-template-columns:1fr}}
+
+/* marquee */
+.marquee{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.marquee .track{display:flex;width:max-content;animation:slide var(--dur,60s) linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+@keyframes slide{to{transform:translateX(-50%)}}
+.mq-logos .item{width:clamp(110px,12vw,170px);height:clamp(80px,8vw,110px);display:grid;place-items:center;padding:12px;flex:none}
+.mq-logos img{max-height:100%;width:auto;object-fit:contain;filter:grayscale(1);opacity:.75;mix-blend-mode:multiply;transition:filter .4s,opacity .4s}
+.mq-logos .item:hover img{filter:none;opacity:1}
+.mq-sponsors .item{width:clamp(160px,18vw,240px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mq-logos img{mix-blend-mode:normal;filter:grayscale(1) invert(1) brightness(1.4);opacity:.6}}
+:root[data-theme="dark"] .mq-logos img{mix-blend-mode:normal;filter:grayscale(1) invert(1) brightness(1.4);opacity:.6}
+
+/* apply band */
+.band{background:var(--deep);color:var(--band-ink);overflow:hidden}
+.band .marquee{border-color:rgba(241,242,240,.18);-webkit-mask-image:none;mask-image:none}
+.band .word{font:500 clamp(3.2rem,11vw,11rem)/1 var(--display);letter-spacing:-.045em;text-transform:uppercase;padding:.12em .3em;display:flex;align-items:center;gap:.3em;white-space:nowrap}
+.band .word i{display:block;width:.5em;height:.433em;background:var(--orange);clip-path:var(--hex)}
+.band .word:nth-child(even) i{background:var(--sun)}
+.band-foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding-block:28px 40px}
+.band-foot .lbl{color:rgba(241,242,240,.72)}
+.pill{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;background:var(--orange);color:var(--on-accent);font-weight:500;transition:transform .4s var(--ease),background .3s}
+.pill:hover{transform:translateY(-2px);background:var(--sun)}
+
+/* footer */
+.ftr{padding-block:64px 0}
+.ftr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:32px}
+.ftr h4{margin:0 0 14px}
+.ftr ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ftr a:hover{color:var(--orange)}
+.ftr .note{color:var(--muted);font-size:14px;margin-top:48px;max-width:70ch}
+.ftr-word{font:600 clamp(4rem,23vw,26rem)/.78 var(--display);letter-spacing:-.07em;color:var(--orange);margin-top:40px;white-space:nowrap;overflow:hidden;user-select:none;text-transform:lowercase;padding-bottom:.02em}
+@media (max-width:860px){.ftr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- MEMBERS: directory ---------- */
+.dir-top{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hdr));z-index:20;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.dir-bar{display:flex;align-items:center;gap:16px;padding-block:12px}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;padding-block:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px;white-space:nowrap;transition:background .3s,color .3s,border-color .3s}
+.tab sup{font:500 10px/1 var(--mono);color:var(--muted);top:-.1em}
+.tab:hover{border-color:var(--ink)}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tab[aria-pressed="true"] sup{color:var(--orange)}
+.tab .hexdot{display:none}
+.tab[aria-pressed="true"] .hexdot{display:inline-block}
+.search{flex:none;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--ink);padding:6px 2px;width:min(240px,32vw)}
+.search input{border:0;background:none;font:inherit;font-size:14px;color:var(--ink);width:100%;outline:none;min-width:0}
+.search input::placeholder{color:var(--muted)}
+@media (max-width:700px){.dir-bar{flex-direction:column;align-items:stretch;gap:10px}.search{width:100%}}
+
+.dir{display:grid;grid-template-columns:240px minmax(0,1fr);gap:clamp(24px,4vw,64px);padding-top:40px}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--hdr) + 86px);align-self:start;max-height:calc(100vh - var(--hdr) - 110px);overflow:auto;scrollbar-width:thin;display:grid;grid-template-columns:14px minmax(0,1fr);gap:14px;padding-bottom:24px}
+.rail{position:relative;width:1px;background:var(--line);margin-left:6px}
+.rail-fill{position:absolute;left:0;top:0;width:1px;background:var(--orange);height:var(--fill,0%)}
+.rail-hex{position:absolute;left:-6px;width:13px;height:11px;background:var(--orange);clip-path:var(--hex);top:var(--hy,0px);transition:top .45s var(--ease)}
+.toc-g{font:500 11px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+.toc-g:first-child{margin-top:4px}
+.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.toc a{display:flex;align-items:center;gap:6px;font-size:14.5px;line-height:1.25;padding:4px 0;color:var(--muted);transition:color .25s,transform .4s var(--ease)}
+.toc a::before{content:"→";width:0;overflow:hidden;color:var(--orange);transition:width .35s var(--ease)}
+.toc a:hover{color:var(--ink)}
+.toc a.on{color:var(--ink)}
+.toc a.on::before{width:1.1em}
+.toc li[hidden]{display:none}
+@media (max-width:900px){.dir{grid-template-columns:1fr}.toc{display:none}}
+
+.grp-head{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--ink);padding-bottom:18px;scroll-margin-top:calc(var(--hdr) + 90px)}
+.grp-head + .entries{margin-bottom:clamp(64px,9vw,120px)}
+.grp-head .h2{font:500 34px/.95 var(--display);letter-spacing:-.04em;text-transform:uppercase}
+.m{display:grid;grid-template-columns:clamp(120px,15vw,200px) minmax(0,1fr);gap:clamp(18px,3vw,44px);padding-block:clamp(24px,3vw,40px);border-bottom:1px solid var(--line);scroll-margin-top:calc(var(--hdr) + 90px)}
+.m[hidden]{display:none}
+.m-logo{position:relative;aspect-ratio:1/.866;clip-path:var(--hex);background:#fff;overflow:hidden;align-self:start}
+.m-logo img{position:absolute;inset:-7.7% 0;width:100%;height:115.4%;object-fit:cover}
+.m-meta{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:12px}
+.chip{display:inline-flex;align-items:center;gap:7px;font:500 11.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:6px 10px;border:1px solid var(--line);border-radius:999px}
+.chip.hw{border-color:var(--teal);color:var(--teal)}
+.chip.star{border-color:var(--orange);color:var(--orange)}
+.m h3{font-size:clamp(1.6rem,3vw,2.8rem);line-height:1;letter-spacing:-.035em;margin-bottom:14px}
+.m h3 a{background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .5s var(--ease)}
+.m h3 a:hover{background-size:100% 1px}
+.m-desc{color:var(--muted);max-width:64ch;display:grid;gap:10px}
+.m-links{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 20px;font-size:14px}
+.m-links a{display:inline-flex;gap:6px;align-items:center}
+.m-links a:hover{color:var(--orange)}
+.empty{padding:48px 0;color:var(--muted)}
+.empty button{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+@media (max-width:560px){.m{grid-template-columns:1fr}.m-logo{width:132px}}
+
+.m-logo{display:block}
+.m-desc.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.m-tags{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.m-tags li{font-size:13px;padding:5px 10px;background:var(--paper-2);border-radius:4px}
+.m-more{margin-top:18px;font-size:14px}
+
+/* ---------- PROFILE ---------- */
+.pf-top{padding-top:calc(var(--hdr) + 28px)}
+.crumb{display:flex;flex-wrap:wrap;gap:10px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.crumb a:hover{color:var(--orange)}
+.crumb .ink{color:var(--ink)}
+.pf-hero{display:grid;grid-template-columns:clamp(140px,22vw,320px) minmax(0,1fr);gap:clamp(20px,4vw,64px);align-items:end;padding-block:clamp(32px,5vw,64px);border-bottom:1px solid var(--line)}
+.pf-logo{aspect-ratio:1/.866;clip-path:var(--hex);background:#fff;overflow:hidden;position:relative;animation:pfin 1s var(--ease) both}
+.pf-logo img{position:absolute;inset:-7.7% 0;width:100%;height:115.4%;object-fit:cover}
+@keyframes pfin{from{clip-path:polygon(50% 0,50% 0,50% 50%,50% 100%,50% 100%,50% 50%)}to{clip-path:var(--hex)}}
+.pf-name{font-size:clamp(2.4rem,7vw,7.4rem);line-height:.9;letter-spacing:-.045em;text-transform:uppercase;margin:14px 0 26px}
+.pf-name .ln{display:block}
+.pf-cta{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.pf-zoom{height:200vh}
+.zoom-frame.fit{background:#fff}
+.zoom-frame.fit img{object-fit:contain}
+.pf-zoom .zoom-frame img{object-position:50% 100%;transform-origin:50% 100%}
+.pf-body{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:clamp(28px,6vw,110px);padding-block:clamp(56px,8vw,120px)}
+.pf-main{display:grid;gap:22px;align-content:start}
+.pf-mission{font-size:clamp(1.45rem,2.7vw,2.5rem);line-height:1.12;letter-spacing:-.025em;text-wrap:pretty}
+.pf-rest{display:grid;gap:14px;font-size:1.05rem}
+.pf-words{margin:clamp(16px,3vw,36px) 0 0;padding-top:24px;border-top:1px solid var(--line);display:grid;gap:14px}
+.pf-words blockquote{margin:0;font-size:clamp(1.1rem,1.6vw,1.4rem);line-height:1.35;letter-spacing:-.01em;max-width:52ch}
+.pf-side{display:grid;gap:44px;align-content:start;position:sticky;top:calc(var(--hdr) + 28px)}
+.pf-side>div{display:grid;gap:14px}
+.pf-off,.pf-links{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.pf-off li{display:flex;gap:14px;align-items:center;padding-block:14px;border-bottom:1px solid var(--line);font-weight:500;font-size:1.05rem;letter-spacing:-.01em}
+.pf-off .hx{width:16px;height:14px;flex:none;clip-path:var(--hex);background:var(--orange)}
+.pf-off li:nth-child(even) .hx{background:var(--teal)}
+.pf-links a{display:flex;justify-content:space-between;gap:12px;padding-block:12px;border-bottom:1px solid var(--line);transition:padding .4s var(--ease)}
+.pf-links a:hover{padding-inline:8px;color:var(--orange)}
+.pf-next{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);margin-bottom:clamp(56px,8vw,110px)}
+.pf-next a{display:grid;gap:10px;padding-block:clamp(24px,4vw,48px)}
+.pf-next .nx{text-align:right;border-left:1px solid var(--line);padding-left:20px}
+.pf-next .nm{font:500 clamp(1.4rem,3.6vw,3.4rem)/.95 var(--display);letter-spacing:-.035em;text-transform:uppercase;transition:color .3s}
+.pf-next a:hover .nm{color:var(--orange)}
+@media (max-width:860px){.pf-body{grid-template-columns:1fr}.pf-side{position:static}}
+@media (max-width:560px){.pf-hero{grid-template-columns:1fr}.pf-logo{width:150px}.pf-next{grid-template-columns:1fr}.pf-next .nx{border-left:0;border-top:1px solid var(--line);padding-left:0;text-align:left}}
+
+/* ---------- MEMBERS: team (progressive disclosure) ---------- */
+.team-g{border-top:1px solid var(--line)}
+.team-g:last-child{border-bottom:1px solid var(--line)}
+.tg-btn{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto auto 44px;align-items:center;gap:clamp(12px,2.5vw,36px);padding-block:clamp(18px,2.4vw,30px);text-align:left}
+.tg-btn .t{font:500 34px/.95 var(--display);letter-spacing:-.04em;text-transform:uppercase;transition:transform .6s var(--ease)}
+.tg-btn:hover .t{transform:translateX(10px)}
+.pile{display:flex}
+.pile span{width:46px;height:40px;clip-path:var(--hex);overflow:hidden;margin-left:-12px;background:var(--paper-2);border:0;transition:margin .5s var(--ease)}
+.pile span:first-child{margin-left:0}
+.pile img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.05)}
+.tg-btn:hover .pile span{margin-left:-4px}
+.tg-btn:hover .pile span:first-child{margin-left:0}
+.team-g.open .pile span{margin-left:-28px;opacity:.0}
+.team-g.open .pile span:first-child{margin-left:0}
+.pile span{transition:margin .5s var(--ease),opacity .4s}
+.plus{width:44px;height:38px;clip-path:var(--hex);background:var(--ink);color:var(--paper);display:grid;place-items:center;font-size:22px;line-height:1;transition:transform .6s var(--ease),background .3s}
+.team-g.open .plus{transform:rotate(135deg);background:var(--orange);color:var(--on-accent)}
+.tg-panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .8s var(--ease)}
+.team-g.open .tg-panel{grid-template-rows:1fr}
+.tg-inner{overflow:hidden;min-height:0}
+.tg-note{color:var(--muted);margin-bottom:28px;max-width:60ch}
+.comb{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px clamp(12px,1.6vw,24px);padding-bottom:calc(60px + 4vw)}
+.cell{display:grid;gap:10px;align-content:start;transform:translateY(30px);opacity:0;transition:transform .8s var(--ease),opacity .6s}
+.team-g.open .cell{transform:none;opacity:1}
+.comb .cell:nth-child(even){margin-top:clamp(36px,5vw,80px)}
+.cell .hx{position:relative;aspect-ratio:1/.866;clip-path:var(--hex);background:var(--paper-2);overflow:hidden}
+.cell .hx::before{content:"";position:absolute;inset:0;background:var(--orange);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%,4% 50%,27% 96%,73% 96%,96% 50%,73% 4%,27% 4%,4% 50%,0 50%);z-index:2;opacity:0;transition:opacity .35s}
+.cell:hover .hx::before{opacity:1}
+.cell .hx img{width:100%;height:100%;object-fit:cover;object-position:50% 28%;filter:grayscale(1) contrast(1.08);transition:transform 1s var(--ease)}
+.cell:hover .hx img{transform:scale(1.07)}
+.cell .nm{font-weight:500;line-height:1.2;letter-spacing:-.01em}
+.cell .rl{font-size:13px;color:var(--muted);line-height:1.3}
+.more-btn{margin:-40px 0 56px;display:inline-flex;gap:10px;align-items:center;font-size:15px}
+.more-btn .hexdot{transition:transform .5s var(--ease)}
+.more-btn:hover .hexdot{transform:rotate(120deg)}
+@media (max-width:1000px){.comb{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:560px){.comb{grid-template-columns:repeat(2,minmax(0,1fr))}.tg-btn{grid-template-columns:minmax(0,1fr) auto 44px}.tg-btn .pile{display:none}}
+
+.concept{position:fixed;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;align-items:center;gap:8px;
+  background:var(--ink);color:var(--paper);font:500 11px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:9px 13px;border-radius:999px;box-shadow:0 6px 24px rgba(0,0,0,.18);max-width:calc(100vw - 24px)}
+.concept i{width:9px;height:8px;flex:none;background:var(--orange);clip-path:var(--hex)}
+/* ---------- mobile refinements ---------- */
+@media (max-width:760px){
+  /* product photo: static, full-width image with caption below instead of the sticky zoom */
+  .pf-zoom{height:auto}
+  .pf-zoom .zoom-sticky{position:static;height:auto;display:block;overflow:visible}
+  .pf-zoom .zoom-frame{width:100%!important;height:auto!important;clip-path:none!important;background:transparent;overflow:visible}
+  .pf-zoom .zoom-frame img{position:static;display:block;width:100%;height:auto;transform:none!important;filter:none!important;background:var(--paper-2)}
+  .pf-zoom .zoom-shade{display:none}
+  .pf-zoom .zoom-cap{position:static;opacity:1;color:var(--ink);padding-top:16px;padding-bottom:0;flex-direction:column;align-items:flex-start;gap:8px}
+  .pf-zoom .zoom-cap .big{text-shadow:none;font-size:1.5rem!important}
+  .pf-zoom .zoom-cap .lbl{color:var(--muted)}
+  .pf-zoom{padding-top:28px}
+  /* section heads: keep secondary text and links left-aligned */
+  .sec-head>div[style*="justify-self:end"]{justify-self:start!important;justify-items:start!important}
+  .sec-head>div[style*="justify-self:end"] .body{text-align:left!important}
+  /* filter tabs: fade hints that the row scrolls */
+  .tabs{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:32px}
+  /* 16px input text stops iOS zooming on focus */
+  .search input{font-size:16px}
+  /* footer links: comfortable tap spacing */
+  .ftr ul{gap:0}
+  .ftr ul a{display:inline-block;padding-block:7px}
+  .menu-grid ul{gap:0}
+  .menu-grid li a{display:inline-block;padding-block:7px}
+  .menu-grid{gap:28px 24px;margin-top:3vh}
+}
+@media (max-width:560px){
+  .m{grid-template-columns:76px minmax(0,1fr);gap:16px}
+  .m-logo{width:auto}
+  .m h3{font-size:1.5rem}
+  .m-meta{margin-bottom:8px}
+}
+@media (pointer:coarse){
+  .menu-btn::before,.crumb a::before,.m-more::before,.hdr .logo::before,#menuClose::before{content:"";position:absolute;inset:-12px -8px}
+  .crumb a,.hdr .logo,#menuClose{position:relative}
+}
+/* views */
+[data-view]{display:block}
+[data-view][hidden]{display:none}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+  .marquee .track{animation:none}
+  .zoom{height:auto}.zoom-sticky{position:relative;height:70vh}
+}
+</style>
+
+<!-- ================= HEADER ================= -->
+<header class="hdr wrap" id="hdr">
+  <a class="logo" href="#home" aria-label="Rev: Ithaca Startup Works home"><img class="lg-l" src="assets/photos/revlogo-transparent.png" alt="rev — Ithaca Startup Works" width="300" height="81"><img class="lg-d" src="assets/photos/revlogo-transparent-dark.png" alt="" aria-hidden="true" width="300" height="81"></a>
+  <nav class="nav" aria-label="Primary">
+    <a href="https://www.revithaca.com/about-rev/">About</a>
+    <a href="#members" data-nav="members">Members</a>
+    <a href="https://www.revithaca.com/hardware/">Hardware Accelerators</a>
+    <a href="https://www.revithaca.com/rev-members/job-listings/">Startup Jobs</a>
+    <a href="https://www.revithaca.com/community/">Events</a>
+  </nav>
+  <div class="right">
+    <a class="u apply-top" href="https://www.revithaca.com/join-rev/">How to apply</a>
+    <button class="menu-btn u" id="menuOpen" aria-expanded="false" aria-controls="menu">Menu</button>
+  </div>
+</header>
+
+<div class="menu wrap" id="menu" role="dialog" aria-modal="true" aria-label="Site menu">
+  <div class="menu-top"><img class="lg-l" src="assets/photos/revlogo-transparent.png" alt="rev — Ithaca Startup Works" width="300" height="81"><img class="lg-d" src="assets/photos/revlogo-transparent-dark.png" alt="" aria-hidden="true" width="300" height="81"><button class="u" id="menuClose">Close</button></div>
+  <div class="menu-grid">
+    <div class="col"><h4><a href="https://www.revithaca.com/about-rev/">About</a></h4><ul>
+      <li><a href="https://www.revithaca.com/about-rev/people/">Mentors &amp; Team</a></li>
+      <li><a href="https://www.revithaca.com/startup-resources/">Startup Resources</a></li>
+      <li><a href="https://www.revithaca.com/rev-member-success-2/">Rev Support Network</a></li>
+      <li><a href="https://www.revithaca.com/10-year-anniversary/">Rev’s 10th Anniversary</a></li></ul></div>
+    <div class="col"><h4><a href="#members" data-close>Members</a></h4><ul>
+      <li><a href="#members" data-close>Member directory</a></li>
+      <li><a href="https://www.revithaca.com/member-resources/">For Members</a></li>
+      <li><a href="https://www.revithaca.com/rev-members/job-listings/">Startup Jobs</a></li>
+      <li><a href="https://www.revithaca.com/rev-blog/">News</a></li></ul></div>
+    <div class="col"><h4><a href="https://www.revithaca.com/hardware/">Hardware</a></h4><ul>
+      <li><a href="https://www.revithaca.com/prototyping-hardware-accelerator/">Prototyping Hardware Accelerator</a></li>
+      <li><a href="https://www.revithaca.com/protofacturing-hardware-accelerator/">Protofacturing Hardware Accelerator</a></li>
+      <li><a href="https://www.revithaca.com/manufacturing-hardware-accelerator/">Manufacturing Hardware Accelerator</a></li>
+      <li><a href="https://www.revithaca.com/hardware-accelerator-alumni/">Hardware Accelerator Alumni</a></li>
+      <li><a href="https://www.revithaca.com/hardware-resources/">Hardware Resources</a></li></ul></div>
+    <div class="col"><h4><a href="https://www.revithaca.com/community/">Events</a></h4><ul>
+      <li><a href="https://www.revithaca.com/join-rev/">How to Apply</a></li>
+      <li><a href="https://www.revithaca.com/contact-rev/">Contact Us</a></li></ul></div>
+  </div>
+</div>
+
+<main>
+<!-- ======================================================= HOME ======================================================= -->
+<div data-view="home">
+  <section class="hero wrap">
+    <div class="display">
+      <div class="hero-row">
+        <span class="hero-mark" aria-hidden="true"><svg viewBox="0 0 100 86.6"><polygon points="25,0 75,0 100,43.3 75,86.6 25,86.6 0,43.3" fill="var(--orange)"/><polygon points="38,22 62,22 74,43.3 62,64.6 38,64.6 26,43.3" fill="var(--paper)"/></svg></span>
+        <span class="ln"><span>Helping</span></span>
+        <span class="ln"><span>companies</span></span>
+      </div>
+      <div class="hero-row">
+        <span class="ln"><span>Scale and</span></span>
+        <span class="ln"><span>succeed<span class="sup">(EST. 2014)</span></span></span>
+      </div>
+    </div>
+    <div class="hero-foot">
+      <div class="thumb"><img src="assets/photos/space.jpg" alt="Two Rev staff members standing in the Rev co-working space"></div>
+      <div>
+        <p class="lede">Rev: Ithaca Startup Works is a business incubator located in Ithaca, NY. Through mentorship, accelerator programs, resources, co-working space, events, and networking, companies in any field will gain the tools they need to scale.</p>
+        <div class="cta-row"><a class="u" href="https://www.revithaca.com/join-rev/">Become a Rev member</a><a class="u" href="#members">Meet our members <span class="arrow">→</span></a></div>
+      </div>
+      <div class="scroll-cue">(SCROLL) <i></i></div>
+    </div>
+  </section>
+
+  <section class="zoom" data-zoom aria-label="Inside Rev">
+    <div class="zoom-sticky">
+      <div class="zoom-side l">State of the art<br>co-working facility</div>
+      <div class="zoom-side r">Downtown<br>Ithaca, NY</div>
+      <div class="zoom-frame"><img src="assets/home/workshop.jpg" alt="Five participants in Rev's Prototyping and ClimateTech Prototyping programs sit around a table while another person stands and leads a talk."><div class="zoom-shade"></div>
+        <div class="zoom-cap wrap"><div class="big">314 East State<br>Street, Ithaca</div><div class="lbl">(Rev: Ithaca Startup Works)</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" aria-labelledby="feat-h">
+    <div class="sec-head"><div><span class="lbl">(Featured)</span><h2 class="h2" id="feat-h">Latest from Rev</h2></div><div style="justify-self:end"><a class="u" href="https://www.revithaca.com/rev-blog/">All news <span class="arrow">→</span></a></div></div>
+    <div class="feat">
+      <a href="https://www.revithaca.com/ursa-space-secures-27-9-million-in-new-equity-financing/" class="rise-in"><div class="photo"><img src="assets/home/news-ursa.jpg" alt="Image of Earth from space."></div><span class="lbl">Member news</span><h3>Ursa Space Secures $27.9 Million in New Equity Financing</h3></a>
+      <a href="https://www.revithaca.com/growing-madeira/" class="rise-in"><div class="photo"><img src="assets/home/news-madeira.jpg" alt="Colorful smoothies lined up for display"></div><span class="lbl">Member story</span><h3>Growing More Than Açai: Madeira Trading on Tariffs, Trust and the Future</h3></a>
+      <a href="https://www.revithaca.com/rev-blog/" class="rise-in"><div class="photo"><img src="assets/home/news-momentum.jpg" alt="Rev members at work"></div><span class="lbl">Year in review</span><h3>A Year of Momentum for Rev’s Members and Makers</h3></a>
+    </div>
+  </section>
+
+  <section class="sec wrap" style="padding-top:0" aria-labelledby="offer-h">
+    <div class="offer">
+      <div class="offer-l">
+        <span class="lbl">(Membership)</span>
+        <h2 class="h2" id="offer-h">What Rev<br>members get</h2>
+        <p class="body">Companies in any field get the tools they need to scale, all under one roof at 314 East State Street.</p>
+        <div><a class="pill" href="https://www.revithaca.com/join-rev/">Become a Rev member <span class="arrow">→</span></a></div>
+      </div>
+      <ul>
+        <li><span class="hx"></span>State of the art co-working facility</li>
+        <li><span class="hx"></span>Networking events</li>
+        <li><span class="hx"></span>Accelerator programs</li>
+        <li><span class="hx"></span>Entrepreneur mentorship</li>
+        <li><span class="hx"></span>Hardware prototyping machinery</li>
+        <li><span class="hx"></span>Connections to funding resources</li>
+        <li><span class="hx"></span>Entrepreneurship content sessions</li>
+        <li><span class="hx"></span>Headshot and product photography</li>
+        <li><span class="hx"></span>Social media amplification</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec wrap" style="padding-top:0">
+    <div class="quote rise-in">
+      <div class="qh" aria-hidden="true">“</div>
+      <div><blockquote>Rev is more than just a house for entrepreneurship. The members, mentors, and program participants make it a home.</blockquote>
+      <cite class="lbl ink">— Ken Rother, Rev Director</cite></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" style="padding-top:0" aria-labelledby="stat-h">
+    <div class="sec-head"><div><span class="lbl">(Impact since 2014)</span><h2 class="h2" id="stat-h">Rev startups are fueling the local economy</h2></div>
+      <div style="justify-self:end;display:grid;gap:14px;justify-items:end"><p class="body" style="text-align:right">Since 2014, Rev startups accomplished:</p><a class="u" href="https://www.revithaca.com/rev-members/job-listings/">View startup jobs <span class="arrow">→</span></a></div></div>
+    <div class="stats">
+      <div class="stat"><div class="n" data-count="1146" data-fmt="int">1,146</div><span class="lbl ink">Jobs created</span></div>
+      <div class="stat"><div class="n" data-count="309" data-fmt="m"><em>$</em>309<em>M</em></div><span class="lbl ink">Capital raised</span></div>
+      <div class="stat"><div class="n" data-count="175" data-fmt="m"><em>$</em>175<em>M</em></div><span class="lbl ink">Revenue generated</span></div>
+    </div>
+  </section>
+
+  <section class="sec wrap" style="padding-top:0" aria-labelledby="ev-h">
+    <div class="events">
+      <div style="display:grid;gap:22px;align-content:start">
+        <span class="lbl">(Community)</span>
+        <h2 class="h2" id="ev-h">Events<span style="color:var(--orange)">@</span>Rev</h2>
+        <p class="body">A major part of Rev’s mission is to convene the startup community in our region. By providing a space that can act as a hub and home for entrepreneurship events, Rev is more than just a business incubator – we are a destination for discussion, collaboration, and education within the entrepreneurial ecosystem.</p>
+        <p class="body">Our events are designed to bring together the entire community, regardless of affiliation or status. Events at Rev are a great opportunity to sneak a peek at the local startup scene, hear the innovative ideas Ithaca produces, and meet new people – even if you don’t own a business or want to create a startup.</p>
+        <div style="display:flex;gap:22px;flex-wrap:wrap"><a class="u" href="https://www.revithaca.com/events/category/community-event/list/">View events <span class="arrow">→</span></a><a class="u" href="https://www.revithaca.com/10-year-anniversary/">10th Anniversary</a></div>
+      </div>
+      <ul class="ev-list">
+        <li><a href="https://www.revithaca.com/event/rev-content-session-product-2026-2-2/"><div class="ev-date">Dec 2026<b>11</b></div><div><div class="ev-t">Rev Entrepreneurship Essentials: Product Management</div><div class="ev-time">Friday · 12:00 pm – 1:00 pm</div></div><span class="arrow">→</span></a></li>
+        <li><a href="https://www.revithaca.com/event/entrepreneurship-essentials-filing-tax/"><div class="ev-date">Jan 2027<b>15</b></div><div><div class="ev-t">Rev Entrepreneurship Essentials: Filing Deadlines, Tax, and Regulatory Obligations</div><div class="ev-time">Friday · 12:00 pm – 1:00 pm</div></div><span class="arrow">→</span></a></li>
+        <li><a href="https://www.revithaca.com/event/prototyping-info-session-27/"><div class="ev-date">Jan 2027<b>28</b></div><div><div class="ev-t">Prototyping Hardware Accelerator Information Session</div><div class="ev-time">Thursday · 4:00 pm – 5:00 pm</div></div><span class="arrow">→</span></a></li>
+        <li><a href="https://www.revithaca.com/event/entrepreneurship-essentials-basic-accounting/"><div class="ev-date">Feb 2027<b>12</b></div><div><div class="ev-t">Rev Entrepreneurship Essentials: Basic Accounting</div><div class="ev-time">Friday · 12:00 pm – 1:00 pm</div></div><span class="arrow">→</span></a></li>
+        <li><a href="https://www.revithaca.com/event/prototyping-info-session-27-2/"><div class="ev-date">Feb 2027<b>16</b></div><div><div class="ev-t">Prototyping Hardware Accelerator Information Session</div><div class="ev-time">Tuesday · 5:00 pm – 6:00 pm</div></div><span class="arrow">→</span></a></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec wrap" style="padding-top:0">
+    <div class="split">
+      <div class="photo" data-pz><img src="assets/home/headheal.jpg" alt="Co-founders of Head & Heal, Allan Gandelman and Karli Miller-Hornick, stand among hemp plants in a greenhouse."></div>
+      <div class="quote" style="grid-template-columns:1fr">
+        <span class="lbl">(Member voices)</span>
+        <blockquote style="font-size:clamp(1.4rem,2.9vw,2.8rem)">We presented at the Rev food and agriculture networking night and the wellness buyer for the Ithaca Wegmans was in the audience. They passed our information on and shortly after we were invited for a meeting with corporate.</blockquote>
+        <cite class="lbl ink" style="margin-top:0">— Karli Miller-Hornick, Co-Founder and CEO, New York Hemp Oil</cite>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" style="padding-top:0" aria-labelledby="ith-h">
+    <div class="sec-head"><div><span class="lbl">(Why Ithaca)</span><h2 class="h2" id="ith-h">Ithaca is a top spot for startups</h2></div>
+      <p class="body">More entrepreneurs are choosing to stay and grow in Ithaca or pick up roots and move to the area. With a wealth of educated and skilled talent, a high quality of life, a vibrant startup scene, and a high volume of issued patents, Ithaca, New York, is a small, tech-savvy community leading the nation.</p></div>
+    <div class="photo wide-photo" data-pz><img src="assets/home/commons.jpg" alt="Ithaca Commons"></div>
+    <div class="ranks">
+      <div class="rank"><div class="r"><sup>#</sup>1</div><h3>Best startup spot for tech without the downsides</h3><p class="body">Bloomberg Businessweek ranked Ithaca the highest out of 300 other U.S. cities for its strong tech hub and high quality of life.</p></div>
+      <div class="rank"><div class="r"><sup>#</sup>13</div><h3>Most innovative city in the US</h3><p class="body">USA Today and 24/7 Wall Street listed Ithaca #13 on its national list of the “25 Most Innovative Cities.”</p></div>
+      <div class="rank"><div class="r"><sup>#</sup>1</div><h3>Highest in R&amp;D expenditures in NY state</h3><p class="body">The Southern Tier, the area encompassing Ithaca, NY, saw $1,674 per capita in higher education Research and Development (R&amp;D) expenditures in 2017, greater than any other region in New York State, including NYC.</p></div>
+    </div>
+    <div class="quote rise-in" style="margin-top:clamp(64px,9vw,120px)">
+      <div class="qh" aria-hidden="true" style="background:var(--orange);color:var(--on-accent)">“</div>
+      <div><blockquote style="font-size:clamp(1.4rem,3.2vw,3rem)">Ithaca has a wealth of talented, skilled employees due to all of the colleges and universities. Ithaca is also great place to live, work, and play.</blockquote>
+      <cite class="lbl ink">— Adam Maher, Founder, Ursa</cite></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="sp-h" style="padding-bottom:clamp(72px,10vw,140px)">
+    <div class="wrap" style="margin-bottom:20px"><span class="lbl" id="sp-h">(Our sponsors)</span></div>
+    <div class="marquee mq-logos mq-sponsors" style="--dur:40s"><div class="track" id="sponsorTrack"></div></div>
+  </section>
+</div>
+
+<!-- ======================================================= MEMBERS ======================================================= -->
+<div data-view="members" hidden>
+  <section class="hero wrap">
+    <div class="display">
+      <div class="hero-row">
+        <span class="hero-mark" aria-hidden="true"><svg viewBox="0 0 100 86.6"><polygon points="25,0 75,0 100,43.3 75,86.6 25,86.6 0,43.3" fill="var(--teal)"/><polygon points="38,22 62,22 74,43.3 62,64.6 38,64.6 26,43.3" fill="var(--paper)"/></svg></span>
+        <span class="ln"><span>Rev</span></span>
+        <span class="ln"><span>Members</span></span>
+      </div>
+      <div class="hero-row">
+        <span class="ln"><span>Built in</span></span>
+        <span class="ln"><span>Ithaca<span class="sup" id="memCount">(43)</span></span></span>
+      </div>
+    </div>
+    <div class="hero-foot">
+      <div class="thumb"><img src="assets/photos/pitch.jpg" alt="Two founders presenting at a Rev pitch event"></div>
+      <div>
+        <p class="lede">The startups and small businesses that call Rev home today, and the Alumni Stardom members who scaled here before them.</p>
+        <div class="cta-row"><a class="u" href="#directory" data-jump="directory">Browse the directory <span class="arrow">→</span></a><a class="u" href="#team" data-jump="team">Mentors &amp; team</a></div>
+      </div>
+      <div class="scroll-cue">(SCROLL) <i></i></div>
+    </div>
+  </section>
+
+  <section style="padding-block:28px 0" aria-label="Member logos">
+    <div class="marquee mq-logos" style="--dur:90s"><div class="track" id="logoTrack"></div></div>
+  </section>
+
+  <section id="directory" aria-labelledby="dir-h" style="scroll-margin-top:var(--hdr)">
+    <div class="wrap sec" style="padding-bottom:28px">
+      <div class="sec-head" style="margin-bottom:0"><div><span class="lbl">(Directory)</span><h2 class="h2" id="dir-h">Find a member</h2></div>
+        <p class="body">Filter by industry or search by name. Select any company to visit its site and channels.</p></div>
+    </div>
+    <div class="dir-top"><div class="wrap dir-bar">
+      <div class="tabs" role="toolbar" aria-label="Filter by industry" id="tabs"></div>
+      <label class="search" for="q"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search members" autocomplete="off"></label>
+    </div></div>
+    <div class="wrap dir">
+      <aside class="toc" aria-label="Members on this page" id="toc">
+        <div class="rail"><div class="rail-fill" id="railFill"></div><div class="rail-hex" id="railHex"></div></div>
+        <div id="tocList"></div>
+      </aside>
+      <div id="entriesWrap">
+        <div class="grp-head" id="g-current"><h2 class="h2">Current members</h2><span class="lbl ink" id="cnt-current"></span></div>
+        <div class="entries" id="list-current"></div>
+        <div class="grp-head" id="g-alumni"><h2 class="h2">Alumni Stardom</h2><span class="lbl ink" id="cnt-alumni"></span></div>
+        <div class="entries" id="list-alumni"></div>
+        <div class="empty" id="empty" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="team" aria-labelledby="team-h" style="scroll-margin-top:var(--hdr)">
+    <div class="sec-head"><div><span class="lbl">(Mentors &amp; team)</span><h2 class="h2" id="team-h">Entrepreneurs in Residence &amp; Program Staff</h2></div>
+      <p class="body">The people who work with Rev members every week. Open a group to meet them.</p></div>
+    <div id="teamGroups"></div>
+  </section>
+</div>
+
+<!-- ======================================================= PROFILE ======================================================= -->
+<div data-view="profile" id="profileView" hidden></div>
+</main>
+
+<!-- ================= APPLY BAND + FOOTER (shared) ================= -->
+<section class="band" aria-labelledby="band-h">
+  <div class="marquee" style="--dur:28s"><div class="track" id="bandTrack"></div></div>
+  <div class="wrap band-foot">
+    <h2 class="lbl" id="band-h" style="font-size:13px">(Become a Rev member) Companies in any field gain the tools they need to scale.</h2>
+    <a class="pill" href="https://www.revithaca.com/join-rev/">How to apply <span class="arrow">→</span></a>
+  </div>
+</section>
+
+<footer class="ftr wrap">
+  <div class="ftr-grid">
+    <div><h4 class="lbl">Location</h4><p>314 East State Street<br>Ithaca, NY 14850</p></div>
+    <div><h4 class="lbl">Contact info</h4><p>P: <span style="user-select:all">(607) 882-2400</span><br>E: <span style="user-select:all">rev@revithaca.com</span></p></div>
+    <div><h4 class="lbl">Sitemap</h4><ul>
+      <li><a href="https://www.revithaca.com/about-rev/">About Rev</a></li><li><a href="#members">Rev Members</a></li>
+      <li><a href="https://www.revithaca.com/member-resources/">For Members</a></li><li><a href="https://www.revithaca.com/hardware/">Hardware Accelerators</a></li>
+      <li><a href="https://www.revithaca.com/rev-members/job-listings/">Startup Jobs</a></li><li><a href="https://www.revithaca.com/community/">Events at Rev</a></li>
+      <li><a href="https://www.revithaca.com/contact-rev/">Getting to Rev</a></li><li><a href="https://www.revithaca.com/join-rev/">How to Apply</a></li>
+      <li><a href="https://www.revithaca.com/contact-rev/">Contact Us</a></li></ul></div>
+    <div><h4 class="lbl">Follow us</h4><ul>
+      <li><a href="http://www.twitter.com/revIthaca">Twitter / X ↗</a></li><li><a href="https://www.facebook.com/revithaca/">Facebook ↗</a></li>
+      <li><a href="https://www.youtube.com/channel/UCyTLCqnRpiLu3t5JPOqQ8UA">YouTube ↗</a></li><li><a href="https://www.linkedin.com/company/rev-ithaca-startup-works">LinkedIn ↗</a></li>
+      <li><a href="https://www.instagram.com/revithaca/">Instagram ↗</a></li><li style="margin-top:10px"><a class="u" href="https://www.revithaca.com/">Sign up for news</a></li></ul></div>
+  </div>
+  <p class="note">This program is administered by the Center for Regional Economic Advancement, a division of Cornell Research &amp; Innovation.</p>
+  <p class="note" style="margin-top:12px">Unofficial design concept, not the official Rev website.</p>
+  <div class="ftr-word" aria-hidden="true">rev ithaca</div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = (s, r=document) => r.querySelector(s), $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------- data ---------------- */
+const IND = {F:'Food & Ag',C:'Climate & Deep Tech',H:'Health & Ed',S:'Software',K:'Consumer'};
+const MERGE = {A:'F',D:'C'};
+const M = [
+ ['8b-education.jpg','8B Education Investments','H','c',['8B Education Investments is fintech company using innovative guarantees and income-share agreements to facilitate affordable financing to African students in leading global universities.'],['https://www.8b.finance/']],
+ ['ajumi.png','Ajumi Networks','S','c',['Ajumi Networks is a telecommunications and software engineering firm delivering telecom infrastructure, network design, fiber-optic consulting, broadband deployment, wireless systems, and Quality of Service optimization. The company supports infrastructure assessments, systems integration, and resilient connectivity planning for municipalities, enterprises, and underserved communities.'],['https://ajuminetworks.com/']],
+ ['antithesis.png','Antithesis Foods','F','c',['Antithesis Foods is a food technology company making better food through science. Our products are built from a novel processing technology that uses chickpeas to make more nutrient dense ingredients.'],['https://www.antithesisfoods.com/','https://www.linkedin.com/company/antithesisfoods/']],
+ ['crc.jpg','Children’s Reading Connection','H','c',['Children\'s Reading Connection works to inspire, create, and promote efforts that build a culture of family and community literacy.'],['https://www.childrensreadingconnection.org/','https://www.facebook.com/childrensreadingconnection/','https://www.youtube.com/channel/UC_-SORSLCkOEB9OUQuuR88w']],
+ ['cleanlabel.png','CleanLabel Solution','A','c',['Manufacturing Proprietary Soy-Based Feed for Livestock and Providing Technical Support in the Area of Waste Valorization and Waste Treatment.'],['https://cleanlabelsolution.com/']],
+ ['clearleaf.png','ClearLeaf Inc.','A','c',['ClearLeaf uses patented technology, organic certified in the EU and Japan, to provide a line of safe fungicides and bactericides for agricultural use. We currently have pre and postharvest solutions for several crops including specialty, row, vegetables, and ornamentals.'],['https://clearleaf.ag/','https://www.linkedin.com/company/clearagro','https://www.youtube.com/@ClearAgro','https://www.facebook.com/ClearLeafCR','https://www.instagram.com/clearleafcr/']],
+ ['copperhorse.jpg','Copperhorse Coffee','F','c',['Copperhorse Coffee is a small-batch coffee roastery and tasting room specializing in fresh crop artisan coffees from around the world.'],['https://www.copperhorsecoffee.com/','http://www.facebook.com/copperhorsecoffee','https://twitter.com/copperhorseco','http://instagram.com/copperhorsecoffee']],
+ ['cornerpin.png','Cornerpin','S','c',['Cornerpin delivers attentive, personalized service for home buyers and sellers, using targeted nationwide marketing to connect Finger Lakes properties with buyers seeking the unique qualities and sustainable future that Ithaca and the surrounding region offer.'],['https://ithacarealtor.com/','https://www.linkedin.com/in/soderquist/']],
+ ['cryobio.png','CryoBio, Inc','A','c',['We are developing innovative solutions based on natural biomolecules to create effective and affordable sprays that protect crops from frost damage. These sprays could potentially safeguard up to 5% of the total food produced, potentially feeding over 100 million people.'],['https://www.cryo.bio/','https://www.linkedin.com/company/cryobio/']],
+ ['dosamigos.jpg','Dos Amigos','F','c',['Dos Amigos is the passion project of two Cornell students from the West Coast. David and Jorge teamed up to create an authentic street-style taco recipes, served up in their state-of-the-art taco truck.'],['https://www.dosamigosfood.com/','https://www.facebook.com/dosamigosfood','https://www.linkedin.com/company/dosamigosfood/','https://www.instagram.com/eat.dosamigos/']],
+ ['draughtlab.png','DraughtLabs','F','c',['DraughtLab provides food & beverage companies with crucial flavor insights through software tools, education, and services built on lean sensory science principles.'],['https://www.draughtlab.com/','https://www.linkedin.com/company/draughtlab','https://www.instagram.com/draughtlab/']],
+ ['empeq.jpg','EMPEQ','C','c',['EMPEQ was created to remove the upfront cost barrier to energy efficient upgrades at commercial buildings while saving building owners 10-40% on energy expenses day one.'],['https://empeq.co/']],
+ ['florae.jpg','Florae Collaborative','K','c',['Florae Collaborative is a rare plant nursery with a focus on sustainability and carnivorous plants.'],['https://www.floraecollaborative.com/','https://www.facebook.com/floraecollaborative/','https://www.instagram.com/floraecollaborative/']],
+ ['frost.png','Frost Methane Labs','C','c',['Frost Methane partners with livestock farmers to neutralize methane from manure ponds, earning carbon credit revenue, preventing water ingress and eliminating smells.'],['http://frostmethane.com/','http://www.linkedin.com/company/frost-methane-labs/'],'ClimateTech Protofacturing · 2024'],
+ ['heatinverse.png','Heat Inverse','C','c',['Heat Inverse’s cooling technology helps manufacturers increase efficiency simply and inexpensively, using photonic thin-film materials that get cold with zero-energy input.'],['https://www.heatinverse.com/','https://www.linkedin.com/company/heatinverse/','https://twitter.com/HeatInverse'],'Manufacturing Accelerator'],
+ ['hirro.png','Hirro','S','c',[],[]],
+ ['ithacatoys.png','Ithaca Toys Company','K','c',['Ithaca Toys Company develops educational wooden toys that are made from locally-sourced maple from Cortland, NY and shaped and designed by local artisans.'],['https://ithacatoys.com/','https://www.instagram.com/ithacatoys/','https://twitter.com/ithacatoys']],
+ ['kingsley.png','Kingsley Quality Woodworking','K','c',['Kingsley Quality Woodworking builds custom cabinetry, furniture and millwork to fulfill on the vision of your space.'],['http://www.kingsleymade.com/']],
+ ['madeira.jpg','Madeira Trading','F','c',['Madeira Trading develops strategic partnerships between exotic fruit growers in Brazil and the U.S. food industry.'],['https://madeiratrading.com/']],
+ ['awetism.png','Navigating AWEtism','H','c',['Navigating AWEtism\'s mission is to streamline and democratize the medical and educational odyssey that parents go through after their child receives an autism diagnosis.'],['https://awetism.net/','https://www.youtube.com/channel/UCrnw5_DvQ4E7IRwa3zSJe7g','https://www.linkedin.com/in/theresamlyonsphd/']],
+ ['photon.png','Photon Counting Systems LLC','D','c',['Revolutionizing scientific imaging and enabling breakthrough applications across medicine and science with ultra high speed wide field photon counting cameras.'],['https://www.photoncountingsystems.com/']],
+ ['propagate.png','Propagate Ventures','A','c',['Propagate makes it easy for landowners to design, plant, and manage agroforestry systems so that they can increase the cash yield of farmland.'],['https://www.propagateag.com/']],
+ ['purenano.png','Pure NanoTech','D','c',['PureNanoTech develops high-performance nanobubble systems engineered for stability, efficiency, and real-world deployment across water-based applications.'],['https://purenanotec.com/about-purenanotech/']],
+ ['qinaworks.png','QinaWorks','H','c',['QinaWorks helps teams and individuals build people\'s nervous system capacity to think clearly and perform well under pressure, through NeuroLead for teams, NeuroBalance for individuals, and NeuroCoach for coach certification.'],['https://sansurising.com/neurolead/']],
+ ['seen.jpg','Seen Nutrition','F','c',['The first Calcium Chew made from only 4 real foods to give you highly bioavailable calcium, vitamin D, phosphorus, magnesium, and protein for better bone health.'],['https://www.seennutrition.com/','https://www.instagram.com/thecalciumqueens','https://www.facebook.com/seennutrition','https://www.tiktok.com/@thecalciumqueens','https://www.pinterest.com/seennutrition/']],
+ ['sibrands.png','SI Brands LLC','S','c',['SI Brands helps entrepreneurs build powerful, scalable brands through The One Brand Strategy (TOBS), an AI-enhanced, one-week brand strategy product for solopreneurs and early founders.'],['http://theone.sibrands.co/','https://www.linkedin.com/in/susie-ippolito/']],
+ ['simplifed.png','SimpliFed','H','c',['SimpliFed provides new parents with highly skilled and trained lactation consultant to provide answers quickly through a secure, online, video-based connection.'],['https://www.simplifed.com/','https://www.facebook.com/SimpliFedBaby','https://www.instagram.com/simplifedbaby/']],
+ ['triton.png','Triton Bio','D','c',['Triton Bio is developing novel bioinstruments to accelerate lab workflows, with applications in research and diagnostics.'],['https://www.tritonbio.com/']],
+ ['udderways.png','UdderWays','A','c',['Our new innovation uses a unique, brushless technology to gently stimulate cows and ensure clean and dry teats. With our patented vortex-style application, you can achieve consistent stimulation and effortlessly promote milk letdown.'],['https://www.udderways.com/'],'Manufacturing Accelerator · 2024'],
+ ['unibaio.png','Unibaio','A','c',['Unibaio creates biodegradable nano-additives that boost pesticide absorption in plants, reducing chemical use by up to 80% and enabling faster adoption of sustainable agriculture worldwide.'],['https://unibaio.com/','https://ar.linkedin.com/company/unibaio']],
+ ['zabbot.png','Zabbot LLC','H','c',['Zabbot is a heritage language learning platform that blends AI, culture, and community to help diaspora learners master pronunciation, connect with identity, and preserve language. Zabbot will start with the Yorùbá language.'],['https://zabbot.com/','https://www.linkedin.com/company/zabbot']],
+ ['dimensional.png','Dimensional Energy','C','a',['Dimensional Energy makes solar fuels viable through efficient utilization and even distribution of sunlight in scalable reactor forms.'],['https://dimensionalenergy.com/','https://www.linkedin.com/company/dimensional-energy/','https://twitter.com/dimensionalnrg','https://www.facebook.com/dimensionalenergy/','https://www.instagram.com/dimensionalenergy/']],
+ ['ecolectro.png','Ecolectro','C','a',['Using cutting-edge technology to solve the biggest challenges — cost, scale, and durability — to producing green hydrogen.'],['https://ecolectro.com/','https://www.linkedin.com/company/ecolectro-inc-/','https://www.facebook.com/ecolectroinc/','https://twitter.com/ecolectroinc?lang=en']],
+ ['exostellar.png','Exostellar','S','a',['Exostellar, previously known as Exotanium, ensures cloud-computing data and applications are protected and secure.'],['https://www.exostellar.ai/contact']],
+ ['fartherfarms.jpg','Farther Farms','F','a',['Farther Farms is an innovative food processing company, using technology to create a more sustainable food system.','Its innovative sterilization technology produces shelf-stable foods that don’t need freezing or refrigeration. Their first product is the world’s first commercially available shelf-stable french fry – a major addition to an industry dominated by frozen fries first invented in the 1940s.','By sidestepping cold storage, the company aims to open new markets in regions that lack refrigeration while reducing supply chain costs and carbon emissions.','In 2021, the company received a $225,000 Phase 1 Small Business Technology Transfer grant from the National Science Foundation and celebrated the growth of its company to over 25 people.'],['https://www.fartherfarms.com/','https://www.linkedin.com/company/farther-farms/','https://twitter.com/fartherfarms?lang=en','https://www.instagram.com/fartherfarms/?hl=en','https://www.sbir.gov/about/about-sttr']],
+ ['firelight.png','Firelight Camps','K','a',['Firelight Camps accommodate the needs of outdoor tourist markets by offering a high-quality glamping experience.'],['https://firelightcamps.com/']],
+ ['givegab.jpg','GiveGab','S','a',['GiveGab is now Bonterra. Bonterra is the number one digital solution for Giving Days and year-round fundraising tailored to cause-based organizations, community foundations, education institutions, and public media outlets. Bonterra offers a complete suite of products and services that make fundraising easy, enjoyable, and effective.','In 2020, the company moved into a larger office space in downtown Ithaca and grew to over 50 employees. As of 2021, the company has helped more than 40,000 nonprofits raise over $2 billion for great causes worldwide. The company was recently acquired by EveryAction and remains an independent subsidiary in Ithaca, NY.'],['https://www.givegab.com/','https://x.com/BonterraTech','https://www.facebook.com/BonterraTech','https://www.youtube.com/@BonterraTech','https://www.instagram.com/bonterratech/','https://www.linkedin.com/company/bonterra-tech/']],
+ ['headandheal.png','Head and Heal','A','a',['Head and Heal is an organically-grown, locally sourced hemp processor based in New York State.'],['https://headandheal.com/','https://www.facebook.com/groups/headandhealinsiders','https://www.instagram.com/headandheal/','https://www.youtube.com/channel/UChfGrTdNg3Tku5njJYYgD8w']],
+ ['imh.png','Indian Milk & Honey','F','a',['Ag & Food Tech is commercializing a Cornell-patented emulsion technology to create water-in-oil emulsions capable of replacing fat with water for healthier food products. This technology is being utilized by the startup’s affiliate company Indian Milk & Honey.'],['https://www.indianmilkandhoney.com/','https://www.facebook.com/indianmilkandhoney/','https://www.instagram.com/indianmilkandhoney/','https://www.youtube.com/channel/UCkHDyd-fC6YJ1Taas2vR76Q']],
+ ['rosie.jpg','Rosie','S','a',['Rosie is a leading SaaS provider of predictive online and mobile shopping applications and they provide online shopping for private and independent groceries across the country.','Fueled by rising demand for online grocery shopping and delivery amid the pandemic, Rosie tripled the size of its team and increased the number of retail and wholesale partnerships by over 900%.','To retain these new, online grocery shoppers and their larger orders well after the pandemic, the tech-led company formed several partnerships to keep its new customer base satisfied. Rosie teamed up with DoorDash to expand its grocery delivery services across the United States and partnered with AppCard and ShoptoCook to launch the startup’s next-gen Omnichannel Commerce Program—a seamless experience for customers to access digital receipts, loyalty pricing and points, digital coupons, and other touchpoints.','Rosie leveraged its pandemic growth to raise $10 million in Series A financing in 2021 led by Avenue Growth Partners, a Washington, D.C. based investment firm.'],['https://www.rosieapp.com/','https://appcard.com/','https://www.shoptocook.com/']],
+ ['southhill.jpg','South Hill Cider','F','a',['South Hill Cider makes well-crafted hard cider in small batches, with attention to detail.'],['https://southhillcider.squarespace.com/','https://www.facebook.com/SouthHillCider','https://www.instagram.com/southhillcider/']],
+ ['standardh2.png','Standard Hydrogen Corp.','C','a',['Standard Hydrogen is revolutionizing the way we store and distribute renewable power and fuel. We are building a network of multi-functional, onsite produced renewable hydrogen stations to deliver needed benefits to the renewable energy market today, and to energize the zero emissions vehicles (ZEVs) of tomorrow.'],['https://www.standardhydrogencorp.com/']],
+ ['ursa.png','Ursa','D','a',['Ursa Space Systems is a geospatial services company that uses a radar satellite network to detect events happening around the world. Ursa analyzes data from the satellite network to deliver timely insights to people who make decisions.','Since its founding in 2014 as one of Rev’s inaugural members, Ursa has focused on providing analytics to the energy and finance industries. With the $15 million from its Series B, the company continues to expand its services to other industries including insurance, logistics and environmental and social governance (ESG).'],['http://www.ursaspace.com/']]
+].map(([img,name,ind,st,desc,links,hw])=>({img,name,ind:MERGE[ind]||ind,st,desc,links,hw,id:'m-'+img.split('.')[0]}));
+
+/* offerings distilled from Rev's description + each company's own site */
+const OFFER = {
+ '8b-education':['Income-share agreements','Financing guarantees','Support for African students at global universities'],
+ ajumi:['Telecom infrastructure & network design','Fiber-optic & broadband deployment','Wireless systems','Quality of Service optimization'],
+ antithesis:['Protein & fiber snack crackers','Private-label & white-label manufacturing','Chickpea-based ingredients'],
+ crc:['Family literacy programs','Community literacy efforts'],
+ cleanlabel:['Proprietary soy-based livestock feed','Waste valorization support','Waste treatment support'],
+ clearleaf:['Organic-certified fungicides & bactericides','Pre- and postharvest crop solutions'],
+ copperhorse:['Small-batch roasted coffee','Fresh-crop artisan coffees','Tasting room in Ithaca'],
+ cornerpin:['Home buying & selling','Nationwide marketing for Finger Lakes properties'],
+ cryobio:['Food-safe frost-protection spray','Biodegradable crop protection'],
+ dosamigos:['Street-style tacos','Food truck service'],
+ draughtlab:['Sensory software tools','Flavor education','Sensory science services'],
+ empeq:['Energy-efficiency upgrades with no upfront cost','Commercial building energy savings'],
+ florae:['Rare Nepenthes','Tropical carnivorous plants','Sustainable nursery growing'],
+ frost:['Manure-pond methane elimination','Carbon credit revenue for farms'],
+ heatinverse:['Passive-cooling thin-film metamaterial','Zero-energy cooling for manufacturers'],
+ ithacatoys:['Educational wooden toys','Locally sourced Cortland maple'],
+ kingsley:['Custom cabinetry & furniture','Architectural millwork','Hardwood lumber, flooring & moldings'],
+ madeira:['IQF açaí','Brazilian superfruit purees & powders','Grower-to-industry partnerships'],
+ awetism:['Guides for parents after an autism diagnosis','Evidence-based supplement reviews'],
+ photon:['Wide-field photon counting cameras','High-speed data acquisition'],
+ propagate:['Agroforestry design, planting & management','Regenerative tree farms'],
+ purenano:['Nanobubble systems','Water, agriculture & industry applications'],
+ qinaworks:['NeuroLead for teams','NeuroBalance for individuals','NeuroCoach certification'],
+ seen:['Real-food calcium chews','Bone-health nutrition'],
+ sibrands:['The One Brand Strategy (TOBS)','One-week brand strategy for founders'],
+ simplifed:['Virtual lactation consultations','Baby feeding support','Insurance-covered care'],
+ triton:['Bioinstruments for lab workflows','Research & diagnostics applications'],
+ udderways:['Brushless teat-prep technology','Patented vortex-style application'],
+ unibaio:['Biodegradable nano-additives','Lower-chemical crop protection'],
+ zabbot:['Heritage language learning app','Yorùbá pronunciation & culture'],
+ dimensional:['DEFT catalyst technology licensing','Sustainable aviation fuel & renewable diesel'],
+ ecolectro:['Green hydrogen production technology'],
+ exostellar:['Cloud data & application security'],
+ fartherfarms:['Shelf-stable french fries','Supercritical CO₂ food processing'],
+ firelight:['Luxury safari-tent glamping','Finger Lakes getaways'],
+ givegab:['Giving Days','Year-round fundraising software'],
+ headandheal:['Organic hemp processing','Plant-based hemp products'],
+ imh:['Organic ghee','Lassi','Fat-replacing emulsion technology'],
+ rosie:['Online grocery shopping platform','Omnichannel commerce program'],
+ southhill:['Small-batch hard cider','Wild-apple & heirloom ciders','Ithaca tasting room'],
+ standardh2:['Renewable hydrogen stations','Power & fuel storage'],
+ ursa:['Radar satellite analytics','Geospatial insights for energy & finance']
+};
+/* each company's own pitch, from its website */
+const WORDS = {
+ '8b-education':'8B African Education Investments helps African students succeed at global universities with tools, resources, and world-class support to master every step of their educational journey.',
+ ajumi:'Software, infrastructure, security. We deliver seamless solutions so you can focus on what matters: innovation and growth.',
+ antithesis:'Antithesis Foods develops and manufactures protein and fiber snack crackers for private label and white label brands.',
+ copperhorse:'A small-batch coffee roaster & tasting room in Ithaca, NY. We want to share the simple fun of great coffee with you.',
+ cornerpin:'Cornerpin is a local brokerage built around one idea: We work for you — not shareholders or investors.',
+ cryobio:'CryoBio offers a food-safe spray solution to protect crops from extreme frost, reducing losses and replacing manual labor with effective, biodegradable frost protection technology.',
+ florae:'At Florae, we offer an exclusive and diverse selection of rare Nepenthes for sale and other tropical carnivorous plants.',
+ frost:'Frost Methane works with livestock farms to manage and eliminate methane from manure storages, creating new revenue through carbon credits.',
+ heatinverse:'Heat Inverse designs and distributes a thin metamaterial that passively cools with no energy input and no moving parts.',
+ kingsley:'Kingsley Quality Woodworking is an Upstate New York manufacturer providing builders, contractors and woodworkers with the materials and components they need.',
+ madeira:'Leader Supplier of IQF Acai and Brazilian Super Fruit frozen purees and powders: acerola, soursop, passion fruit, guava and mango.',
+ awetism:'Evidence-based autism insights for parents: practical guides, supplement reviews, and stress-reducing strategies from Yale-trained scientist Theresa Lyons.',
+ propagate:'Trusted across the United States, Propagate is a business that helps farmland owners build regenerative tree farms.',
+ seen:'Seen Nutrition’s calcium chews are made from real foods. No added sugar, no synthetics. Pharmacist-formulated & third-party tested.',
+ sibrands:'The One Brand Strategy delivers a hyper-personalized, richly detailed strategy in just one week.',
+ simplifed:'Get personalized virtual lactation and baby feeding support from certified experts. SimpliFed works with insurance plans to make care easier to access.',
+ dimensional:'Breakthrough catalyst technologies delivering ultra-pure, low-carbon fuels from biomass and waste gases.',
+ fartherfarms:'Supercritical CO₂ food processing for high-quality, shelf-stable and extended shelf-life foods with simpler ingredients.',
+ firelight:'Firelight Camps offers an elevated glamping experience in luxury safari tents on a 15-acre wooded property in Ithaca.',
+ givegab:'The most-trusted nonprofit software for fundraising, grantmaking, case management and CSR.',
+ headandheal:'Get back to happy. Plant-based hemp products for a better life. Made with full-spectrum hemp grown in Cortland, New York on our certified organic farm.',
+ imh:'Organic Ghee and Lassi from Local Freeville Chef Ipshita.',
+ southhill:'Celebrating Finger Lakes terroir by crafting distinctive ciders from hand-foraged wild apples, abandoned orchards and heirloom varieties.'
+};
+/* product visuals, where the company or Rev has published one */
+const PRODUCT = {
+ antithesis:['antithesis.jpg','Protein and fiber snack crackers','contain'],
+ florae:['florae.jpg','Rare Nepenthes from the Florae nursery','contain'],
+ givegab:['givegab.jpg','Bonterra fundraising software','contain'],
+ simplifed:['simplifed-founder.jpg','Founder Andrea Ippolito','cover'],
+ headandheal:['headandheal.jpg','Co-founders Allan Gandelman and Karli Miller-Hornick among their hemp plants','cover'],
+ madeira:['madeira.jpg','Brazilian superfruit smoothies','cover'],
+ ursa:['ursa.jpg','Earth observed from space','cover']
+};
+M.forEach((m,i)=>{ const k=m.id.slice(2); m.k=k; m.offer=OFFER[k]||[]; m.words=WORDS[k]||''; m.prod=PRODUCT[k]||null; m.i=i; });
+
+const TEAM = [
+ {t:'Program Staff', note:'The Rev team running programs, events and the space at 314 East State Street.', p:[
+  ['rother.jpg','Ken Rother','Director of Rev, Entrepreneur in Residence'],['kocher.png','Deanna Kocher','Associate Director of Hardware Programs'],
+  ['clover.jpg','Clover','Chief Happiness Officer'],['knapp.jpg','Anna Knapp','Electronics Product Development Specialist'],
+  ['dracup.jpg','Summer Dracup','Program Coordinator'],['devault.jpg','Sara DeVault-Feldman','Director of Rev’s Chief of Staff'],
+  ['arbital.jpg','Hallie ArbitalJacoby','Senior Event Coordinator & Rev Facility Lead'],['downey.jpg','Katharine Downey','Marketing and Communications Specialist']]},
+ {t:'Entrepreneurs in Residence', note:'EiRs assigned to Rev members and meet regularly.', p:[
+  ['baranov.jpg','Vladimir Baranov'],['burbank.png','Illa Burbank'],['bizari.jpg','Ed Bizari'],['eagle.jpg','Julie Eagle'],['hagen.jpg','Alex Hagen'],
+  ['millerout.jpg','Elisa Miller-Out'],['rendino.jpg','Gene Rendino'],['proujansky.jpg','Aaron Proujansky'],['sandford.jpg','Heather Sandford'],['treat.png','Brad Treat']]},
+ {t:'Subject Matter Experts', note:'Specialists Rev members can tap for focused guidance.', p:[
+  ['bauer.jpg','Brian Bauer'],['bitar.jpg','Adrienne Bitar'],['cook.png','Nate Cook'],['cheney.jpg','Amy Cheney'],['fleming.jpg','Susan Fleming'],
+  ['ray.jpg','Gregory Ray'],['sauer.jpg','Stephen Sauer'],['schryver.jpg','Tom Schryver'],['smithline.png','Justin Smithline'],['tauzel.jpg','John Tauzel'],
+  ['thomas.png','Bennett Thomas'],['wisner.jpg','Stephanie Wisner'],['wright.jpg','Brandon Wright'],['jiang.jpg','Li Jiang'],['neumann.jpg','Melanie Neumann']]}
+];
+const SPONSORS = [['cornellbtp.png','Cornell Business & Technology Park','https://cornellbtp.com/'],['bowers.png','Bowers Accountants and Advisors','http://swcllp.com/'],['klausner.png','Klausner Cook PLLC','https://www.klausnercook.com/'],['yem.png','Youth Entrepreneurship Market','https://yemithaca.com/'],['simutech.png','SimuTech Group','https://simutechgroup.com/'],['longlaw.png','Long Law','https://www.long.law/']];
+
+/* ---------------- render helpers ---------------- */
+const SOCIAL = {'linkedin.com':'LinkedIn','facebook.com':'Facebook','instagram.com':'Instagram','twitter.com':'X / Twitter','x.com':'X / Twitter','youtube.com':'YouTube','tiktok.com':'TikTok','pinterest.com':'Pinterest'};
+function linkLabel(u, i){
+  let h=''; try{h=new URL(u).hostname.replace(/^www\.|^ar\./,'')}catch(e){}
+  for(const k in SOCIAL) if(h===k||h.endsWith('.'+k)) return SOCIAL[k];
+  return i===0 ? 'Website' : h;
+}
+function marquee(track, items, html){ const one = items.map(html).join(''); track.innerHTML = one + one.replace(/<a /g,'<a tabindex="-1" aria-hidden="true" '); }
+
+marquee($('#sponsorTrack'), SPONSORS, s=>`<a class="item" href="${s[2]}" title="${esc(s[1])}"><img src="assets/sponsors/${s[0]}" alt="${esc(s[1])}" loading="lazy"></a>`);
+marquee($('#logoTrack'), M, m=>`<a class="item" href="#p-${m.id.slice(2)}" title="${esc(m.name)}"><img src="assets/logos/${m.img}" alt="${esc(m.name)}" loading="lazy"></a>`);
+(function(){ const words=['Apply to Rev','Scale in Ithaca','Apply to Rev','Join the community'];
+  const one=words.map(w=>`<div class="word">${w}<i></i></div>`).join(''); $('#bandTrack').innerHTML = one + `<div style="display:contents" aria-hidden="true">${one}</div>`; })();
+
+/* ---------------- directory ---------------- */
+const chips = (m,full=true) => `<span class="chip"><span class="hexdot${'CAD'.includes(m.ind)?' teal':''}"></span>${esc(IND[m.ind])}</span>
+      ${!full?'':m.st==='a'?'<span class="chip star">★ Alumni Stardom</span>':'<span class="lbl">Current member</span>'}
+      ${m.hw?`<span class="chip hw">Hardware · ${esc(m.hw)}</span>`:''}`;
+const host = u => { try{ return new URL(u).hostname.replace(/^www\./,'') }catch(e){ return '' } };
+function entry(m){
+  const lead = m.desc[0] || 'Profile coming soon.';
+  return `<article class="m" id="${m.id}" data-ind="${m.ind}" data-st="${m.st}">
+    <a class="m-logo" href="#p-${m.k}" tabindex="-1" aria-hidden="true"><img src="assets/logos/${m.img}" alt="" loading="lazy"></a>
+    <div><div class="m-meta">${chips(m,false)}</div>
+      <h3><a href="#p-${m.k}">${esc(m.name)}</a></h3><p class="m-desc clamp">${esc(lead)}</p>
+      <a class="m-more u" href="#p-${m.k}">View profile <span class="arrow">→</span></a></div></article>`;
+}
+function profile(m){
+  const list = M.filter(x=>x.st===m.st), idx=list.indexOf(m);
+  const prev = list[(idx-1+list.length)%list.length], next = list[(idx+1)%list.length];
+  const site = m.links[0];
+  const rest = m.desc.slice(1).map(p=>`<p>${esc(p)}</p>`).join('');
+  const channels = m.links.map((u,i)=>`<li><a href="${u}" target="_blank" rel="noopener"><span>${esc(linkLabel(u,i))}</span><span class="lbl">${esc(host(u))} ↗</span></a></li>`).join('');
+  return `<section class="wrap pf-top">
+      <nav class="crumb lbl" aria-label="Breadcrumb"><a href="#members" data-back>← All members</a><span>/</span><span>${m.st==='a'?'Alumni Stardom':'Current members'}</span><span>/</span><span class="ink">${esc(IND[m.ind])}</span></nav>
+      <div class="pf-hero">
+        <div class="pf-logo"><img src="assets/logos/${m.img}" alt="${esc(m.name)} logo"></div>
+        <div class="pf-id">
+          <div class="m-meta">${chips(m)}</div>
+          <h1 class="pf-name"><span class="ln"><span>${esc(m.name)}</span></span></h1>
+          <div class="pf-cta">${site?`<a class="pill" href="${site}" target="_blank" rel="noopener">Visit ${esc(host(site))} <span aria-hidden="true">↗</span></a>`:'<span class="lbl">Website coming soon</span>'}</div>
+        </div>
+      </div>
+    </section>
+    ${m.prod?`<section class="zoom pf-zoom" data-zoom aria-label="${esc(m.name)} product">
+      <div class="zoom-sticky"><div class="zoom-side l">(Product)</div><div class="zoom-side r">${esc(m.name)}</div>
+        <div class="zoom-frame${m.prod[2]==='contain'?' fit':''}"><img src="assets/product/${m.prod[0]}" alt="${esc(m.prod[1])}"><div class="zoom-shade"></div>
+          <div class="zoom-cap wrap"><div class="big" style="font-size:clamp(1.6rem,4vw,3.6rem)">${esc(m.prod[1])}</div><div class="lbl">(${esc(m.name)})</div></div></div></div></section>`:''}
+    <section class="wrap pf-body">
+      <div class="pf-main">
+        <span class="lbl">(Mission)</span>
+        <p class="pf-mission">${esc(m.desc[0]||'Full profile coming soon. Contact Rev to learn more about this member.')}</p>
+        ${rest?`<div class="body pf-rest">${rest}</div>`:''}
+        ${m.words?`<figure class="pf-words"><span class="lbl">(In their words)</span><blockquote>${esc(m.words)}</blockquote><figcaption class="lbl">— ${esc(host(site))}</figcaption></figure>`:''}
+      </div>
+      <aside class="pf-side">
+        ${m.offer.length?`<div><span class="lbl">(Offerings)</span><ul class="pf-off">${m.offer.map(o=>`<li><span class="hx"></span>${esc(o)}</li>`).join('')}</ul></div>`:''}
+        ${channels?`<div><span class="lbl">(Website &amp; channels)</span><ul class="pf-links">${channels}</ul></div>`:''}
+      </aside>
+    </section>
+    <nav class="wrap pf-next" aria-label="More members">
+      <a href="#p-${prev.k}" class="pv"><span class="lbl">← Previous</span><span class="nm">${esc(prev.name)}</span></a>
+      <a href="#p-${next.k}" class="nx"><span class="lbl">Next member →</span><span class="nm">${esc(next.name)}</span></a>
+    </nav>`;
+}
+$('#list-current').innerHTML = M.filter(m=>m.st==='c').map(entry).join('');
+$('#list-alumni').innerHTML = M.filter(m=>m.st==='a').map(entry).join('');
+$('#tocList').innerHTML =
+  `<div class="toc-g">Current members</div><ol>${M.filter(m=>m.st==='c').map(m=>`<li data-for="${m.id}"><a href="#${m.id}" data-jumpm="${m.id}">${esc(m.name)}</a></li>`).join('')}</ol>
+   <div class="toc-g">Alumni Stardom</div><ol>${M.filter(m=>m.st==='a').map(m=>`<li data-for="${m.id}"><a href="#${m.id}" data-jumpm="${m.id}">${esc(m.name)}</a></li>`).join('')}</ol>
+   <div class="toc-g">Rev team</div><ol><li><a href="#team" data-jump="team">Mentors &amp; team</a></li></ol>`;
+
+let filt='all', query='';
+const counts = Object.fromEntries(Object.keys(IND).map(k=>[k,M.filter(m=>m.ind===k).length]));
+$('#tabs').innerHTML = [['all','All',M.length],...Object.keys(IND).map(k=>[k,IND[k],counts[k]])]
+  .map(([k,l,n])=>`<button class="tab" data-f="${k}" aria-pressed="${k==='all'}"><span class="hexdot"></span>${esc(l)}<sup>${n}</sup></button>`).join('');
+function applyFilter(){
+  const q=query.trim().toLowerCase(); let shown={c:0,a:0};
+  M.forEach(m=>{
+    const ok=(filt==='all'||m.ind===filt)&&(!q||[m.name,...m.desc,...m.offer].join(' ').toLowerCase().includes(q));
+    document.getElementById(m.id).hidden=!ok; $(`#tocList li[data-for="${m.id}"]`).hidden=!ok; if(ok) shown[m.st]++;
+  });
+  const tot=M.filter(m=>m.st==='c').length, tota=M.filter(m=>m.st==='a').length;
+  $('#cnt-current').textContent = shown.c===tot?`(${tot})`:`(${shown.c} of ${tot})`;
+  $('#cnt-alumni').textContent = shown.a===tota?`(${tota})`:`(${shown.a} of ${tota})`;
+  $('#g-current').hidden=!shown.c; $('#g-alumni').hidden=!shown.a;
+  const e=$('#empty'); e.hidden=!!(shown.c+shown.a);
+  if(e.hidden===false) e.innerHTML=`No members match “${esc(query)}”${filt!=='all'?` in ${esc(IND[filt])}`:''}. <button type="button" id="clearF">Clear filters</button>`;
+  if(window.__ready) onScroll();
+}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('.tab'); if(!b) return; filt=b.dataset.f;
+  $$('.tab').forEach(t=>t.setAttribute('aria-pressed',t===b)); applyFilter();
+  const top=$('#directory .dir').getBoundingClientRect().top; if(top<0) scrollToEl($('#entriesWrap'));});
+$('#q').addEventListener('input',e=>{query=e.target.value; applyFilter();});
+document.addEventListener('click',e=>{ if(e.target.id==='clearF'){filt='all';query='';$('#q').value='';$$('.tab').forEach(t=>t.setAttribute('aria-pressed',t.dataset.f==='all'));applyFilter();}});
+applyFilter();
+
+/* ---------------- team ---------------- */
+$('#teamGroups').innerHTML = TEAM.map((g,gi)=>{
+  const LIMIT=10, extra=g.p.length>LIMIT;
+  const cells=g.p.map((p,i)=>`<div class="cell" ${extra&&i>=LIMIT?'data-more hidden':''} style="transition-delay:${Math.min(i,12)*45}ms"><div class="hx"><img src="assets/team/${p[0]}" alt="${esc(p[1])}" loading="lazy"></div><div><div class="nm">${esc(p[1])}</div>${p[2]?`<div class="rl">${esc(p[2])}</div>`:''}</div></div>`).join('');
+  return `<div class="team-g${gi===0?' open':''}">
+    <button class="tg-btn" aria-expanded="${gi===0}" aria-controls="tg${gi}">
+      <span class="t">${esc(g.t)}</span>
+      <span class="pile" aria-hidden="true">${g.p.slice(0,5).map(p=>`<span><img src="assets/team/${p[0]}" alt=""></span>`).join('')}</span>
+      <span class="lbl ink">(${String(g.p.length).padStart(2,'0')})</span>
+      <span class="plus" aria-hidden="true">+</span>
+    </button>
+    <div class="tg-panel" id="tg${gi}"><div class="tg-inner"><p class="tg-note">${esc(g.note)}</p><div class="comb">${cells}</div>
+      ${extra?`<button class="more-btn u" data-more-btn><span class="hexdot"></span>Show ${g.p.length-LIMIT} more</button>`:''}</div></div></div>`;
+}).join('');
+$('#teamGroups').addEventListener('click',e=>{
+  const b=e.target.closest('.tg-btn'); if(b){const g=b.parentElement, o=!g.classList.contains('open'); g.classList.toggle('open',o); b.setAttribute('aria-expanded',o); return;}
+  const mb=e.target.closest('[data-more-btn]'); if(mb){$$('[data-more]',mb.parentElement).forEach(c=>c.hidden=false); mb.remove();}
+});
+
+/* ---------------- routing ---------------- */
+function scrollToEl(el){ const y=el.getBoundingClientRect().top+scrollY-(parseInt(getComputedStyle(document.documentElement).getPropertyValue('--hdr'))||68)-80; scrollTo({top:Math.max(0,y),behavior:reduce?'auto':'smooth'}); }
+let membersY=0, curView='home';
+function route(){
+  const h=location.hash.slice(1);
+  const pm = h.startsWith('p-') ? M.find(m=>m.k===h.slice(2)) : null;
+  const view = pm ? 'profile' : (h==='members'||h==='directory'||h==='team'||h.startsWith('m-')) ? 'members' : 'home';
+  if(curView==='members' && view!=='members') membersY=scrollY;
+  const from=curView; curView=view;
+  if(pm){ $('#profileView').innerHTML=profile(pm); }
+  $$('[data-view]').forEach(v=>v.hidden=v.dataset.view!==view);
+  $$('[data-nav]').forEach(a=>{ if(a.dataset.nav===view||(view==='profile'&&a.dataset.nav==='members')) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+  document.title = pm ? `${pm.name} · Rev Redesign Concept` : view==='members' ? 'Rev Members · Redesign Concept' : 'Rev Redesign Concept';
+  if(view==='members' && h==='members' && from==='profile' && membersY) scrollTo(0,membersY);
+  else if(from!==view || view==='profile') scrollTo(0,0);
+  if(view==='members' && h && h!=='members'){ const el=document.getElementById(h); if(el) requestAnimationFrame(()=>scrollToEl(el)); }
+  setupReveal(); onScroll();
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-jumpm],[data-jump]'); if(!a) return;
+  const id=a.dataset.jumpm||a.dataset.jump; e.preventDefault();
+  if($('[data-view="members"]').hidden){ location.hash=id; return; }
+  const el=document.getElementById(id); if(el){ if(el.hidden){ filt='all';query='';$('#q').value='';$$('.tab').forEach(t=>t.setAttribute('aria-pressed',t.dataset.f==='all'));applyFilter(); } scrollToEl(el); }
+});
+addEventListener('hashchange',route);
+
+/* ---------------- menu ---------------- */
+const menu=$('#menu'), mo=$('#menuOpen');
+function setMenu(o){ menu.classList.toggle('open',o); mo.setAttribute('aria-expanded',o); document.body.style.overflow=o?'hidden':''; if(o) $('#menuClose').focus(); }
+mo.addEventListener('click',()=>setMenu(true)); $('#menuClose').addEventListener('click',()=>setMenu(false));
+menu.addEventListener('click',e=>{ if(e.target.closest('a')) setMenu(false); });
+addEventListener('keydown',e=>{ if(e.key==='Escape') setMenu(false); });
+
+/* ---------------- reveal + counters ---------------- */
+let io;
+function setupReveal(){
+  if(reduce||!('IntersectionObserver' in window)) return;
+  io && io.disconnect();
+  io=new IntersectionObserver(es=>es.forEach(en=>{ if(en.isIntersecting){ en.target.classList.remove('pre'); if(en.target.dataset.count) countUp(en.target); io.unobserve(en.target);} }),{rootMargin:'0px 0px -8% 0px'});
+  $$('[data-view]:not([hidden]) .rise-in, [data-view]:not([hidden]) [data-count]').forEach(el=>{
+    if(el.getBoundingClientRect().top>innerHeight){ if(el.classList.contains('rise-in')) el.classList.add('pre'); io.observe(el); }
+  });
+}
+function countUp(el){
+  const end=+el.dataset.count, m=el.dataset.fmt==='m', t0=performance.now(), d=1600;
+  const f=n=> m?`<em>$</em>${n}<em>M</em>`:n.toLocaleString('en-US');
+  (function step(t){ const k=Math.min(1,(t-t0)/d), e=1-Math.pow(1-k,4); el.innerHTML=f(Math.round(end*e)); if(k<1) requestAnimationFrame(step); })(t0);
+}
+
+/* ---------------- scroll engine ---------------- */
+const hdr=$('#hdr'); let lastY=scrollY, ticking=false;
+const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+function zoomStage(st){
+  const r=st.getBoundingClientRect(); if(r.bottom<0||r.top>innerHeight) return;
+  const total=Math.max(1,r.height-innerHeight); const p=reduce?1:Math.min(1,Math.max(0,-r.top/total)); const e=ease(p), k=1-e;
+  const W=document.documentElement.clientWidth, H=innerHeight, w0=Math.min(W*(W<760?.72:.42),540);
+  const f=st.querySelector('.zoom-frame'), img=f.querySelector('img');
+  f.style.width=(w0+(W-w0)*e)+'px'; f.style.height=(w0*.866+(H-w0*.866)*e)+'px';
+  f.style.clipPath=`polygon(${25*k}% 0,${100-25*k}% 0,100% ${50*k}%,100% ${100-50*k}%,${100-25*k}% 100%,${25*k}% 100%,0 ${100-50*k}%,0 ${50*k}%)`;
+  img.style.transform=`scale(${1.35-.35*e})`; img.style.filter=`grayscale(${k})`;
+  st.style.setProperty('--p',e.toFixed(3));
+}
+function onScroll(){
+  const y=scrollY, H=innerHeight;
+  hdr.classList.toggle('solid',y>20);
+  hdr.classList.toggle('compact', y>160 && y>lastY && innerWidth>900 ? true : (y<lastY-6||y<160) ? false : hdr.classList.contains('compact'));
+  lastY=y;
+  const view=$('[data-view]:not([hidden])');
+  $$('[data-zoom]',view).forEach(zoomStage);
+  if(!reduce){
+    $$('[data-pz] img',view).forEach(img=>{ const r=img.parentElement.getBoundingClientRect(); if(r.bottom<0||r.top>H) return;
+      const t=(r.top+r.height/2)/H; img.style.transform=`scale(${1+.22*Math.min(1,Math.abs(t-.5)*1.6)})`; });
+  }
+  if(view.dataset.view==='members'){
+    const ms=$$('.m:not([hidden])'); let act=null;
+    ms.forEach(m=>{ const r=m.getBoundingClientRect();
+      if(r.top<H*.42) act=m; });
+    $$('#tocList a.on').forEach(a=>a.classList.remove('on'));
+    const ew=$('#entriesWrap').getBoundingClientRect(); const pr=Math.min(1,Math.max(0,(H*.42-ew.top)/ew.height));
+    $('#toc').style.setProperty('--fill',(pr*100).toFixed(1)+'%'); $('#railFill').style.height=(pr*100).toFixed(1)+'%';
+    const teamTop=$('#team').getBoundingClientRect().top;
+    let link = teamTop<H*.5 ? $('#tocList a[data-jump="team"]') : act ? $(`#tocList a[data-jumpm="${act.id}"]`) : null;
+    if(link){ link.classList.add('on'); const toc=$('#toc'); const lt=link.getBoundingClientRect().top-toc.getBoundingClientRect().top+toc.scrollTop;
+      $('#railHex').style.top=(lt+link.offsetHeight/2-5.5)+'px';
+      const vis=link.getBoundingClientRect(), tb=toc.getBoundingClientRect(); if(vis.top<tb.top+30||vis.bottom>tb.bottom-30) toc.scrollTop+= (vis.top-tb.top)-tb.height/2; }
+  }
+}
+addEventListener('scroll',()=>{ if(!ticking){ticking=true;requestAnimationFrame(()=>{onScroll();ticking=false;});} },{passive:true});
+addEventListener('resize',onScroll);
+window.__ready=true;
+route();
+</script>
+
+</body>
+</html>
