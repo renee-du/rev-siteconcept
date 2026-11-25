@@ -578,7 +578,7 @@ p{margin:0}
 
   <section class="sec wrap" style="padding-top:0">
     <div class="split">
-      <div class="photo" data-pz><img src="assets/home/headheal.jpg" alt="Co-founders of Head & Heal, Allan Gandelman and Karli Miller-Hornick, stand among hemp plants in a greenhouse."></div>
+      <div class="photo"><img src="assets/home/headheal.jpg" alt="Co-founders of Head & Heal, Allan Gandelman and Karli Miller-Hornick, stand among hemp plants in a greenhouse."></div>
       <div class="quote" style="grid-template-columns:1fr">
         <span class="lbl">(Member voices)</span>
         <blockquote style="font-size:clamp(1.4rem,2.9vw,2.8rem)">We presented at the Rev food and agriculture networking night and the wellness buyer for the Ithaca Wegmans was in the audience. They passed our information on and shortly after we were invited for a meeting with corporate.</blockquote>
@@ -590,7 +590,7 @@ p{margin:0}
   <section class="sec wrap" style="padding-top:0" aria-labelledby="ith-h">
     <div class="sec-head"><div><span class="lbl">(Why Ithaca)</span><h2 class="h2" id="ith-h">Ithaca is a top spot for startups</h2></div>
       <p class="body">More entrepreneurs are choosing to stay and grow in Ithaca or pick up roots and move to the area. With a wealth of educated and skilled talent, a high quality of life, a vibrant startup scene, and a high volume of issued patents, Ithaca, New York, is a small, tech-savvy community leading the nation.</p></div>
-    <div class="photo wide-photo" data-pz><img src="assets/home/commons.jpg" alt="Ithaca Commons"></div>
+    <div class="photo wide-photo"><img src="assets/home/commons.jpg" alt="Ithaca Commons"></div>
     <div class="ranks">
       <div class="rank"><div class="r"><sup>#</sup>1</div><h3>Best startup spot for tech without the downsides</h3><p class="body">Bloomberg Businessweek ranked Ithaca the highest out of 300 other U.S. cities for its strong tech hub and high quality of life.</p></div>
       <div class="rank"><div class="r"><sup>#</sup>13</div><h3>Most innovative city in the US</h3><p class="body">USA Today and 24/7 Wall Street listed Ithaca #13 on its national list of the “25 Most Innovative Cities.”</p></div>
@@ -662,8 +662,7 @@ p{margin:0}
   </section>
 
   <section class="sec wrap" id="team" aria-labelledby="team-h" style="scroll-margin-top:var(--hdr)">
-    <div class="sec-head"><div><span class="lbl">(Mentors &amp; team)</span><h2 class="h2" id="team-h">Entrepreneurs in Residence &amp; Program Staff</h2></div>
-      <p class="body">The people who work with Rev members every week. Open a group to meet them.</p></div>
+    <div class="sec-head"><div><h2 class="h2" id="team-h">Mentors &amp; Team</h2></div></div>
     <div id="teamGroups"></div>
   </section>
 </div>
@@ -963,7 +962,7 @@ $('#teamGroups').innerHTML = TEAM.map((g,gi)=>{
       <span class="lbl ink">(${String(g.p.length).padStart(2,'0')})</span>
       <span class="plus" aria-hidden="true">+</span>
     </button>
-    <div class="tg-panel" id="tg${gi}"><div class="tg-inner"><p class="tg-note">${esc(g.note)}</p><div class="comb">${cells}</div>
+    <div class="tg-panel" id="tg${gi}"><div class="tg-inner"><div class="comb">${cells}</div>
       ${extra?`<button class="more-btn u" data-more-btn><span class="hexdot"></span>Show ${g.p.length-LIMIT} more</button>`:''}</div></div></div>`;
 }).join('');
 $('#teamGroups').addEventListener('click',e=>{
