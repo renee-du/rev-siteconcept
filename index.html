@@ -222,8 +222,9 @@ p{margin:0}
 /* marquee */
 .marquee{overflow:hidden;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.marquee .track{display:flex;width:max-content;animation:slide var(--dur,60s) linear infinite}
-.marquee:hover .track{animation-play-state:paused}
+.marquee{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.marquee::-webkit-scrollbar{display:none}
+.marquee .track{display:flex;width:max-content}
 @keyframes slide{to{transform:translateX(-50%)}}
 .mq-logos .item{width:clamp(110px,12vw,170px);height:clamp(80px,8vw,110px);display:grid;place-items:center;padding:12px;flex:none}
 .mq-logos img{max-height:100%;width:auto;object-fit:contain;filter:grayscale(1);opacity:.75;mix-blend-mode:multiply;transition:filter .4s,opacity .4s}
@@ -395,16 +396,7 @@ p{margin:0}
 .concept i{width:9px;height:8px;flex:none;background:var(--orange);clip-path:var(--hex)}
 /* ---------- mobile refinements ---------- */
 @media (max-width:760px){
-  /* product photo: static, full-width image with caption below instead of the sticky zoom */
-  .pf-zoom{height:auto}
-  .pf-zoom .zoom-sticky{position:static;height:auto;display:block;overflow:visible}
-  .pf-zoom .zoom-frame{width:100%!important;height:auto!important;clip-path:none!important;background:transparent;overflow:visible}
-  .pf-zoom .zoom-frame img{position:static;display:block;width:100%;height:auto;transform:none!important;filter:none!important;background:var(--paper-2)}
-  .pf-zoom .zoom-shade{display:none}
-  .pf-zoom .zoom-cap{position:static;opacity:1;color:var(--ink);padding-top:16px;padding-bottom:0;flex-direction:column;align-items:flex-start;gap:8px}
-  .pf-zoom .zoom-cap .big{text-shadow:none;font-size:1.5rem!important}
-  .pf-zoom .zoom-cap .lbl{color:var(--muted)}
-  .pf-zoom{padding-top:28px}
+  .pf-zoom .zoom-cap .big{font-size:1.9rem!important}
   /* section heads: keep secondary text and links left-aligned */
   .sec-head>div[style*="justify-self:end"]{justify-self:start!important;justify-items:start!important}
   .sec-head>div[style*="justify-self:end"] .body{text-align:left!important}
@@ -1068,6 +1060,27 @@ function onScroll(){
 }
 addEventListener('scroll',()=>{ if(!ticking){ticking=true;requestAnimationFrame(()=>{onScroll();ticking=false;});} },{passive:true});
 addEventListener('resize',onScroll);
+function autoScroll(el){
+  const dur=parseFloat(getComputedStyle(el).getPropertyValue('--dur'))||60;
+  let x=el.scrollLeft, last=performance.now(), resume=0, hover=false, onScreen=true;
+  const hold=()=>{ resume=performance.now()+2500; };
+  el.addEventListener('touchstart',hold,{passive:true});
+  el.addEventListener('pointerdown',hold);
+  el.addEventListener('wheel',hold,{passive:true});
+  el.addEventListener('pointerenter',e=>{ if(e.pointerType==='mouse') hover=true; });
+  el.addEventListener('pointerleave',()=>{ hover=false; });
+  el.addEventListener('scroll',()=>{ if(Math.abs(el.scrollLeft-x)>2){ x=el.scrollLeft; hold(); } },{passive:true});
+  new IntersectionObserver(es=>{ onScreen=es[0].isIntersecting; }).observe(el);
+  (function tick(t){
+    const dt=Math.min(.1,(t-last)/1000); last=t;
+    const half=el.scrollWidth/2;
+    if(onScreen && !hover && t>resume && half>el.clientWidth){
+      x+=half/dur*dt; if(x>=half) x-=half; el.scrollLeft=x;
+    }
+    requestAnimationFrame(tick);
+  })(last);
+}
+if(!reduce) $$('.marquee').forEach(autoScroll);
 window.__ready=true;
 route();
 </script>
